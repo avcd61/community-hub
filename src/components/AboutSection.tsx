@@ -52,6 +52,21 @@ const AboutSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const } },
+  };
+
   return (
     <section id="about" className="py-24 relative overflow-hidden" ref={ref}>
       {/* Background */}
@@ -65,8 +80,8 @@ const AboutSection = () => {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            О <span className="text-gradient">нас</span>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-foreground">
+            О нас
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Мы — сообщество творческих людей, объединённых любовью к музыке, играм и искусству
@@ -76,49 +91,58 @@ const AboutSection = () => {
         {/* Stats */}
         <motion.div
           className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
         >
           {stats.map((stat, index) => (
-            <div
+            <motion.div
               key={index}
-              className="text-center p-6 glass-card rounded-2xl"
+              variants={itemVariants}
+              className="text-center p-6 glass-card rounded-2xl hover:border-border transition-colors"
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
-              <div className="text-3xl md:text-4xl font-display font-bold text-gradient mb-2">
+              <div className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
                 {stat.value}
               </div>
               <div className="text-muted-foreground text-sm">
                 {stat.label}
               </div>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
 
         {/* Member Cards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+        >
           {memberCards.map((member, index) => (
             <motion.div
               key={member.name}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+              variants={itemVariants}
               className="group"
+              whileHover={{ y: -8, transition: { duration: 0.3 } }}
             >
-              <div className="glass-card-glow p-6 rounded-2xl h-full transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_40px_hsl(263_80%_60%/0.2)]">
-                <div className="relative w-20 h-20 mx-auto mb-4">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-accent opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300" />
+              <div className="glass-card p-6 rounded-2xl h-full transition-all duration-300 hover:border-border">
+                <motion.div 
+                  className="relative w-20 h-20 mx-auto mb-4"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <img
                     src={member.avatar}
                     alt={member.name}
-                    className="relative w-full h-full object-cover rounded-full border-2 border-border group-hover:border-primary/50 transition-colors"
+                    className="relative w-full h-full object-cover rounded-full border-2 border-border group-hover:border-foreground/30 transition-colors"
                   />
-                </div>
+                </motion.div>
                 <div className="text-center">
-                  <h3 className="font-display font-bold text-lg mb-1 group-hover:text-primary transition-colors">
+                  <h3 className="font-display font-bold text-lg mb-1 text-foreground group-hover:text-foreground transition-colors">
                     {member.name}
                   </h3>
-                  <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
+                  <span className="inline-block px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium mb-3 border border-border/50">
                     {member.role}
                   </span>
                   <p className="text-muted-foreground text-sm leading-relaxed">
@@ -128,7 +152,7 @@ const AboutSection = () => {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

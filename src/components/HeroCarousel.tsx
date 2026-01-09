@@ -87,22 +87,22 @@ const HeroCarousel = () => {
   const currentMember = members[currentIndex];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background gradient */}
+    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      {/* Background gradient - no purple glow */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card" />
       
-      {/* Animated background glow */}
+      {/* Subtle animated background element - neutral */}
       <motion.div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30"
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-10"
         style={{
-          background: 'radial-gradient(circle, hsl(263 80% 50% / 0.4) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(0 0% 100% / 0.1) 0%, transparent 70%)',
         }}
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.35, 0.2],
+          scale: [1, 1.1, 1],
+          opacity: [0.05, 0.1, 0.05],
         }}
         transition={{
-          duration: 5,
+          duration: 8,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
@@ -124,11 +124,12 @@ const HeroCarousel = () => {
                 className="relative"
               >
                 <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-accent opacity-50 blur-2xl animate-pulse-glow" />
+                  {/* Subtle neutral glow instead of purple */}
+                  <div className="absolute inset-0 rounded-full bg-white/5 blur-2xl" />
                   <img
                     src={currentMember.avatar}
                     alt={currentMember.name}
-                    className="relative w-full h-full object-cover rounded-full border-4 border-primary/30 shadow-[0_0_60px_hsl(263_80%_60%/0.3)]"
+                    className="relative w-full h-full object-cover rounded-full border-2 border-border/50 shadow-[0_0_60px_hsl(0_0%_100%/0.1)]"
                   />
                 </div>
               </motion.div>
@@ -147,7 +148,7 @@ const HeroCarousel = () => {
                 transition={{ duration: 0.5 }}
               >
                 <motion.span
-                  className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-sm font-medium mb-6"
+                  className="inline-block px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-6 border border-border/50"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
@@ -155,7 +156,7 @@ const HeroCarousel = () => {
                   {currentMember.role}
                 </motion.span>
 
-                <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-gradient">
+                <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-foreground">
                   {currentMember.name}
                 </h1>
 
@@ -163,7 +164,7 @@ const HeroCarousel = () => {
                   "{currentMember.quote}"
                 </p>
 
-                <Button variant="hero" size="xl" className="group">
+                <Button variant="default" size="xl" className="group bg-foreground text-background hover:bg-foreground/90">
                   <span>Присоединиться</span>
                   <svg
                     className="w-5 h-5 transition-transform group-hover:translate-x-1"
@@ -180,12 +181,14 @@ const HeroCarousel = () => {
 
         {/* Navigation */}
         <div className="flex items-center justify-center gap-6 mt-12">
-          <button
+          <motion.button
             onClick={() => navigate(-1)}
-            className="p-3 rounded-full bg-card/50 border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+            className="p-3 rounded-full bg-card/50 border border-border/50 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </motion.button>
 
           <div className="flex gap-2">
             {members.map((_, index) => (
@@ -195,21 +198,23 @@ const HeroCarousel = () => {
                   setDirection(index > currentIndex ? 1 : -1);
                   setCurrentIndex(index);
                 }}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                className={`h-2.5 rounded-full transition-all duration-300 ${
                   index === currentIndex
-                    ? 'bg-primary w-8'
-                    : 'bg-muted hover:bg-muted-foreground'
+                    ? 'bg-foreground w-8'
+                    : 'bg-muted hover:bg-muted-foreground w-2.5'
                 }`}
               />
             ))}
           </div>
 
-          <button
+          <motion.button
             onClick={() => navigate(1)}
-            className="p-3 rounded-full bg-card/50 border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+            className="p-3 rounded-full bg-card/50 border border-border/50 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <ChevronRight className="w-5 h-5" />
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -220,7 +225,7 @@ const HeroCarousel = () => {
         transition={{ duration: 2, repeat: Infinity }}
       >
         <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2">
-          <div className="w-1 h-2 rounded-full bg-primary" />
+          <div className="w-1 h-2 rounded-full bg-foreground" />
         </div>
       </motion.div>
     </section>

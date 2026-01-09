@@ -96,6 +96,19 @@ const MusicSection = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const } },
+  };
+
   return (
     <section id="music" className="py-24 relative overflow-hidden" ref={ref}>
       {/* Background */}
@@ -109,8 +122,8 @@ const MusicSection = () => {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            Наши <span className="text-gradient">альбомы</span>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-foreground">
+            Наши альбомы
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Музыка, созданная нашим сообществом с любовью и страстью
@@ -118,17 +131,21 @@ const MusicSection = () => {
         </motion.div>
 
         {/* Albums Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {albums.map((album, index) => (
+        <motion.div
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+        >
+          {albums.map((album) => (
             <motion.div
               key={album.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
+              variants={itemVariants}
               onClick={() => openPlayer(album)}
               className="group cursor-pointer"
+              whileHover={{ y: -8, transition: { duration: 0.3 } }}
             >
-              <div className="relative aspect-square rounded-2xl overflow-hidden glass-card-glow transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_50px_hsl(263_80%_60%/0.3)]">
+              <div className="relative aspect-square rounded-2xl overflow-hidden glass-card transition-all duration-300 group-hover:border-border">
                 <img
                   src={album.cover}
                   alt={album.title}
@@ -136,13 +153,17 @@ const MusicSection = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-[0_0_30px_hsl(263_70%_50%/0.5)]">
-                    <Play className="w-6 h-6 fill-primary-foreground text-primary-foreground ml-1" />
-                  </div>
+                  <motion.div 
+                    className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Play className="w-6 h-6 fill-background text-background ml-1" />
+                  </motion.div>
                 </div>
               </div>
               <div className="mt-4 text-center">
-                <h3 className="font-display font-semibold text-sm md:text-base group-hover:text-primary transition-colors">
+                <h3 className="font-display font-semibold text-sm md:text-base text-foreground group-hover:text-foreground transition-colors">
                   {album.title}
                 </h3>
                 <p className="text-muted-foreground text-xs md:text-sm">
@@ -151,7 +172,7 @@ const MusicSection = () => {
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Music Player Modal */}
@@ -169,7 +190,7 @@ const MusicSection = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass-card-glow w-full max-w-md p-6 rounded-3xl"
+              className="glass-card w-full max-w-md p-6 rounded-3xl border border-border"
             >
               {/* Close Button */}
               <button
@@ -180,7 +201,7 @@ const MusicSection = () => {
               </button>
 
               {/* Album Cover */}
-              <div className="relative aspect-square rounded-2xl overflow-hidden mb-6 shadow-[0_0_40px_hsl(263_80%_60%/0.3)]">
+              <div className="relative aspect-square rounded-2xl overflow-hidden mb-6 border border-border">
                 <img
                   src={selectedAlbum.cover}
                   alt={selectedAlbum.title}
@@ -190,7 +211,7 @@ const MusicSection = () => {
 
               {/* Album Info */}
               <div className="text-center mb-6">
-                <h3 className="font-display text-2xl font-bold mb-1">
+                <h3 className="font-display text-2xl font-bold mb-1 text-foreground">
                   {selectedAlbum.title}
                 </h3>
                 <p className="text-muted-foreground">{selectedAlbum.artist}</p>
@@ -198,7 +219,7 @@ const MusicSection = () => {
 
               {/* Current Track */}
               <div className="text-center mb-4">
-                <span className="text-sm text-primary font-medium">
+                <span className="text-sm text-foreground font-medium">
                   {currentTrack + 1}. {selectedAlbum.tracks[currentTrack]}
                 </span>
               </div>
@@ -220,28 +241,34 @@ const MusicSection = () => {
 
               {/* Controls */}
               <div className="flex items-center justify-center gap-4 mb-6">
-                <button
+                <motion.button
                   onClick={prevTrack}
                   className="p-3 rounded-full bg-card hover:bg-muted transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <SkipBack className="w-5 h-5" />
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-4 rounded-full bg-primary text-primary-foreground shadow-[0_0_30px_hsl(263_70%_50%/0.5)] hover:scale-105 transition-transform"
+                  className="p-4 rounded-full bg-foreground text-background hover:scale-105 transition-transform"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {isPlaying ? (
                     <Pause className="w-6 h-6" />
                   ) : (
                     <Play className="w-6 h-6 ml-0.5" />
                   )}
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={nextTrack}
                   className="p-3 rounded-full bg-card hover:bg-muted transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <SkipForward className="w-5 h-5" />
-                </button>
+                </motion.button>
               </div>
 
               {/* Volume */}
@@ -257,7 +284,7 @@ const MusicSection = () => {
               </div>
 
               {/* Download Button */}
-              <Button variant="glass" className="w-full">
+              <Button variant="outline" className="w-full border-border hover:border-foreground/30">
                 <Download className="w-4 h-4 mr-2" />
                 Скачать альбом
               </Button>
