@@ -25,11 +25,14 @@ const FrontierlandSection = () => {
 
   return (
     <section id="frontierland" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Background */}
+      {/* Background with subtle purple glow - KEPT for Frontierland */}
       <div className="absolute inset-0 bg-gradient-to-b from-background to-card/50" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-10 pointer-events-none">
+        <div className="w-full h-full bg-gradient-radial from-primary/30 via-primary/10 to-transparent" />
+      </div>
 
       <div className="section-container relative z-10">
-        {/* Header */}
+        {/* Header - with purple accent for Frontierland */}
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
@@ -52,7 +55,7 @@ const FrontierlandSection = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative max-w-5xl mx-auto"
         >
-          <div className="relative aspect-video rounded-2xl overflow-hidden glass-card-glow">
+          <div className="relative aspect-video rounded-2xl overflow-hidden glass-card border border-primary/20">
             {screenshots.map((screenshot, index) => (
               <motion.img
                 key={index}
@@ -66,46 +69,55 @@ const FrontierlandSection = () => {
             ))}
 
             {/* Navigation Arrows */}
-            <button
+            <motion.button
               onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 transition-all"
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 hover:border-primary/30 transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 transition-all"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 hover:border-primary/30 transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ChevronRight className="w-6 h-6" />
-            </button>
+            </motion.button>
 
             {/* Bottom-left description */}
-            <div className="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md p-4 rounded-xl bg-background/70 backdrop-blur-sm border border-border/50">
+            <motion.div 
+              className="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md p-4 rounded-xl bg-background/70 backdrop-blur-sm border border-border/50"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               <p className="text-sm md:text-base text-foreground leading-relaxed">
                 Погрузитесь в мир безграничных возможностей. Стройте замки, 
                 исследуйте подземелья, создавайте свою историю вместе с друзьями 
                 в уникальной атмосфере нашего сервера.
               </p>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Dots */}
+          {/* Dots - with purple accent */}
           <div className="flex justify-center gap-2 mt-6">
             {screenshots.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                className={`h-2.5 rounded-full transition-all duration-300 ${
                   index === currentSlide
                     ? 'bg-primary w-8'
-                    : 'bg-muted hover:bg-muted-foreground'
+                    : 'bg-muted hover:bg-muted-foreground w-2.5'
                 }`}
               />
             ))}
           </div>
         </motion.div>
 
-        {/* Features */}
+        {/* Features - with purple accents */}
         <motion.div
           className="grid md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
@@ -117,14 +129,18 @@ const FrontierlandSection = () => {
             { icon: '⚔️', title: 'PvE приключения', desc: 'Сражайтесь с уникальными боссами' },
             { icon: '🤝', title: 'Сообщество', desc: 'Находите друзей и союзников' },
           ].map((feature, index) => (
-            <div
+            <motion.div
               key={index}
-              className="glass-card p-6 rounded-2xl text-center hover:border-primary/30 transition-colors"
+              className="glass-card p-6 rounded-2xl text-center hover:border-primary/30 transition-colors border border-border/50"
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
             >
               <div className="text-4xl mb-3">{feature.icon}</div>
-              <h3 className="font-display font-semibold mb-2">{feature.title}</h3>
+              <h3 className="font-display font-semibold mb-2 text-foreground">{feature.title}</h3>
               <p className="text-muted-foreground text-sm">{feature.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
       </div>

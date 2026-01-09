@@ -91,21 +91,14 @@
     @apply bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl;
   }
 
-  .glass-card-glow {
-    @apply glass-card shadow-[0_0_30px_hsl(263_80%_60%/0.15)];
-  }
-
+  /* Keep text-gradient only for Frontierland section */
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
 
-  .glow-effect {
-    @apply shadow-[0_0_40px_hsl(263_80%_60%/0.3)];
-  }
-
   .side-placeholder {
-    @apply fixed w-16 lg:w-24 opacity-20 pointer-events-none;
-    background: linear-gradient(180deg, hsl(263 80% 60% / 0.1) 0%, transparent 50%, hsl(280 90% 70% / 0.1) 100%);
+    @apply fixed w-16 lg:w-24 opacity-10 pointer-events-none;
+    background: linear-gradient(180deg, hsl(0 0% 100% / 0.05) 0%, transparent 50%, hsl(0 0% 100% / 0.05) 100%);
   }
 
   .side-placeholder-left {
