@@ -2,9 +2,9 @@ import { useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import minecraft1 from '@/assets/minecraft-1.jpg';
-import minecraft2 from '@/assets/minecraft-2.jpg';
-import minecraft3 from '@/assets/minecraft-3.jpg';
+import minecraft1 from '@/assets/FL1.png';
+import minecraft2 from '@/assets/FL2.png';
+import minecraft3 from '@/assets/FL3.png';
 
 const screenshots = [minecraft1, minecraft2, minecraft3];
 
@@ -43,8 +43,8 @@ const FrontierlandSection = () => {
             <span className="text-gradient">Frontierland</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Наш уникальный Minecraft-сервер, где каждый может создать свою историю
-            <span className="text-primary"> (администратор — AndrewHyper)</span>
+            Наш уникальный майнкрафт сервер, где каждый может навалить контенту и забить на него через неделю.
+            <span className="text-primary"> (Андрей - Лучший Админ)</span>
           </p>
         </motion.div>
 
@@ -94,8 +94,8 @@ const FrontierlandSection = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <p className="text-sm md:text-base text-foreground leading-relaxed">
-                Погрузитесь в мир безграничных возможностей. Стройте замки, 
-                исследуйте подземелья, создавайте свою историю вместе с друзьями 
+                Погрузитесь в мир конченных сборок. Стройте писюны, 
+                исспытывайте терпение админа, завозите контент 
                 в уникальной атмосфере нашего сервера.
               </p>
             </motion.div>
@@ -125,9 +125,9 @@ const FrontierlandSection = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           {[
-            { icon: '🏰', title: 'Эпические постройки', desc: 'Создавайте величественные сооружения' },
-            { icon: '⚔️', title: 'PvE приключения', desc: 'Сражайтесь с уникальными боссами' },
-            { icon: '🤝', title: 'Сообщество', desc: 'Находите друзей и союзников' },
+            { icon: '🏰', title: 'Эпические спидраны', desc: 'В 1 секунду существования сервера кальций уже будет ходить в незерке' },
+            { icon: '⚔️', title: 'MGE срачи', desc: 'Пиздиловка из за маленького писюна... ОУ ДА!!!' },
+            { icon: '🤝', title: 'Админ завозит', desc: 'Админ бывает даёт ёбу и начинается ужас' },
           ].map((feature, index) => (
             <motion.div
               key={index}

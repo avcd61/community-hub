@@ -2,11 +2,13 @@ import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 
-import member1 from '@/assets/member-1.jpg';
+import andryhlyper from '@/assets/andryhlyper.jpg';
 import member2 from '@/assets/member-2.jpg';
-import member3 from '@/assets/member-3.jpg';
-import member4 from '@/assets/member-4.jpg';
-
+import vovan from '@/assets/Vovan.jpg';
+import member3 from '@/assets/Миха.png';
+import member4 from '@/assets/Bonedust.jpg';
+import Kalc from '@/assets/calci.png';
+import Bulim from '@/assets/Bul.png';
 interface MemberCard {
   name: string;
   role: string;
@@ -16,36 +18,48 @@ interface MemberCard {
 
 const memberCards: MemberCard[] = [
   {
-    name: 'NightWolf',
+    name: 'Андрей Хлюпер',
     role: 'Основатель',
-    description: 'Визионер и душа сообщества. Создал FSR-95 как место для творческих людей.',
-    avatar: member1,
+    description: 'Абсолютная легенда Кривого Рога, создатель 95 братух и ФСР',
+    avatar: andryhlyper,
   },
   {
-    name: 'Luna',
-    role: 'Креативный директор',
-    description: 'Отвечает за визуальную идентичность и арт-направление всех проектов.',
-    avatar: member2,
+    name: 'Вован Евгеньевич',
+    role: 'Главный монтажёр',
+    description: 'Смонтировал все серии "Мести Меллстроя" и другие популярные видео.',
+    avatar: vovan,
   },
   {
-    name: 'SoundMaster',
-    role: 'Музыкальный продюсер',
-    description: 'Создаёт уникальное звучание сообщества и курирует музыкальные релизы.',
+    name: 'Михал Палыч',
+    role: 'Главнный десигнер',
+    description: 'Создал шедевральные аватарки для канала и сервера ФСР.',
     avatar: member3,
   },
   {
-    name: 'PixelDream',
-    role: 'Модератор',
-    description: 'Заботится о комфорте участников и поддерживает дружескую атмосферу.',
+    name: 'Бон Даст',
+    role: 'Главный работяга',
+    description: 'Работает в Гринвиче днями и ночами.',
     avatar: member4,
+  },
+  {
+    name: 'Булимень',
+    role: 'Гроза Ставрополя',
+    description: 'Уже больше года должен Докичу 100 рублей и теперь боится его приезда.',
+    avatar: Bulim,
+  },
+  {
+    name: 'Кальций',
+    role: 'Спидранер греньки',
+    description: 'Бог скорости, пвп ящер и замечательный актёр в общем кальций.',
+    avatar: Kalc,
   },
 ];
 
 const stats = [
-  { value: '1,500+', label: 'Участников' },
-  { value: '3', label: 'Года вместе' },
+  { value: '95,000+', label: 'Участников' },
+  { value: '1', label: 'Год вместе' },
   { value: '5', label: 'Альбомов' },
-  { value: '24/7', label: 'Активность' },
+  { value: '24/7', label: 'Завозы' },
 ];
 
 const AboutSection = () => {
@@ -84,7 +98,7 @@ const AboutSection = () => {
             О нас
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Мы — сообщество творческих людей, объединённых любовью к музыке, играм и искусству
+            Самые завозные и активные братухи которые сделали большой вклад в развитие ФСР.
           </p>
         </motion.div>
 

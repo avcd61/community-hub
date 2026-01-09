@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  // Treat mp3 files as assets (including uppercase .MP3) so Vite won't try to parse them as JS
+  assetsInclude: ["**/*.mp3", "**/*.MP3"],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

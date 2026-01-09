@@ -1,16 +1,23 @@
 import { motion } from 'framer-motion';
 import { MousePointer } from 'lucide-react';
+import Andrew from '@/assets/Andrew.gif';
+import Brisha from '@/assets/Brisha.gif';
+import Dogh from '@/assets/Dogh.mp4';
 
 interface PlaceholderProps {
   onClick?: () => void;
+  href?: string;
   className?: string;
 }
 
-const Placeholder = ({ onClick, className }: PlaceholderProps) => {
-  return (
+const Placeholder = ({ src, onClick, href, className }: PlaceholderProps & { src?: string }) => {
+  return (  
     <motion.button
-      onClick={onClick}
-      className={`group relative w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-card/30 border border-border/30 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-border/60 hover:bg-card/50 ${className}`}
+      onClick={() => {
+        if (onClick) return onClick();
+        if (href) window.open(href, '_blank');
+      }}
+      className={`group relative rounded-2xl overflow-hidden transition-all duration-300 ${className}`}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, scale: 0.9 }}
@@ -18,62 +25,58 @@ const Placeholder = ({ onClick, className }: PlaceholderProps) => {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      {/* Placeholder content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-        <MousePointer className="w-6 h-6" />
-        <span className="text-xs font-medium">GIF / Image</span>
-      </div>
-      
-      {/* Hover overlay */}
-      <div className="absolute inset-0 bg-foreground/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-      
-      {/* Corner decorations */}
-      <div className="absolute top-2 left-2 w-2 h-2 border-l border-t border-border/50 group-hover:border-muted-foreground/50 transition-colors" />
-      <div className="absolute top-2 right-2 w-2 h-2 border-r border-t border-border/50 group-hover:border-muted-foreground/50 transition-colors" />
-      <div className="absolute bottom-2 left-2 w-2 h-2 border-l border-b border-border/50 group-hover:border-muted-foreground/50 transition-colors" />
-      <div className="absolute bottom-2 right-2 w-2 h-2 border-r border-b border-border/50 group-hover:border-muted-foreground/50 transition-colors" />
+      {src ? (
+        <img src={src} alt="GIF" className="w-full h-full object-cover rounded-2xl" />
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+          <MousePointer className="w-6 h-6" />
+          <span className="text-xs font-medium">GIF / Image</span>
+        </div>
+      )}
     </motion.button>
   );
 };
 
 const InteractivePlaceholders = () => {
-  const handleLeftClick = () => {
-    console.log('Left placeholder clicked');
-    // Can be replaced with actual functionality
-  };
-
-  const handleRightClick = () => {
-    console.log('Right placeholder clicked');
-    // Can be replaced with actual functionality
-  };
+  const andrewLink = 'https://www.youtube.com/@ФСР95';
+ 
 
   return (
     <section className="relative py-8 md:py-12">
-      <div className="section-container">
-        <div className="flex justify-between items-center">
+      {/* Background gradient - same as rest of site */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card" />
+      
+      <div className="section-container relative z-10">
+        <div className="flex justify-between items-center gap-20 md:gap-32 lg:gap-48">
           {/* Left placeholder - positioned with offset from edge */}
-          <motion.div
+            <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="ml-4 md:ml-8"
           >
-            <Placeholder onClick={handleLeftClick} />
+              <Placeholder
+                src={Brisha}
+                onClick={() => {
+                  const audio = new Audio(Dogh);
+                  audio.play();
+                }}
+              />
           </motion.div>
 
           {/* Center space - can be used for decorative elements */}
           <div className="flex-1" />
 
           {/* Right placeholder - positioned with offset from edge */}
-          <motion.div
+            <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mr-4 md:mr-8"
           >
-            <Placeholder onClick={handleRightClick} />
+            <Placeholder src={Andrew} href={andrewLink} />
           </motion.div>
         </div>
       </div>
