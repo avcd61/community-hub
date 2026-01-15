@@ -12,7 +12,7 @@ interface CarouselImage {
 const ImageCarousel: React.FC = () => {
   const sadaImages: CarouselImage[] = Array.from({ length: 16 }, (_, i) => ({
     id: i + 1,
-    url: `/assets/sada/${i + 1}.png`,
+    url: `/sada/${i + 1}.png`,
     title: `Photo ${i + 1}`,
   }));
 
