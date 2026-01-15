@@ -5,6 +5,7 @@ import AboutSection from '@/components/AboutSection';
 import ServerIdentity from '@/components/ServerIdentity';
 import MusicSection from '@/components/MusicSection';
 import FrontierlandSection from '@/components/FrontierlandSection';
+import ImageCarousel from '@/components/ImageCarousel';
 import SidePlaceholders from '@/components/SidePlaceholders';
 import Footer from '@/components/Footer';
 
@@ -25,6 +26,7 @@ const Index = () => {
         <ServerIdentity />
         <MusicSection />
         <FrontierlandSection />
+        <ImageCarousel />
       </main>
 
       <Footer />
