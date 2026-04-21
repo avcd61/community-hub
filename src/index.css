@@ -99,25 +99,6 @@
     @apply border-t border-border;
   }
 
-  /* Brutalist block:
-     - square corners
-     - 1px cream border
-     - offset hard shadow in amber that shifts on hover */
-  .block {
-    @apply relative bg-card border border-border text-foreground transition-transform duration-200 ease-out;
-    box-shadow: 5px 5px 0 0 hsl(var(--primary) / 0.9);
-  }
-  .block:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0 0 hsl(var(--primary));
-  }
-
-  /* The "active" chrome around a channel-selector card. */
-  .block-on {
-    border-color: hsl(var(--primary));
-    box-shadow: 5px 5px 0 0 hsl(var(--signal) / 0.85);
-  }
-
   /* Terminal window chrome — a title bar with a fake tally light. */
   .window {
     @apply relative bg-card border border-border;
