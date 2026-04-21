@@ -2,7 +2,6 @@ import { useReveal } from '@/hooks/use-reveal';
 
 import andryhlyper from '@/assets/andryhlyper.webp';
 import vovan from '@/assets/Vovan.webp';
-import miha from '@/assets/Миха.webp';
 import bonedust from '@/assets/Bonedust.webp';
 import kalc from '@/assets/calci.webp';
 import bulim from '@/assets/Bul.webp';
@@ -26,12 +25,6 @@ const memberCards: MemberCard[] = [
     role: 'Главный монтажёр',
     description: 'Смонтировал все серии "Мести Меллстроя" и другие популярные видео.',
     avatar: vovan,
-  },
-  {
-    name: 'Михал Палыч',
-    role: 'Главнный десигнер',
-    description: 'Создал шедевральные аватарки для канала и сервера ФСР.',
-    avatar: miha,
   },
   {
     name: 'Бон Даст',
@@ -88,21 +81,25 @@ const AboutSection = () => {
             развитие ФСР.
           </p>
 
-          {/* Stats strip */}
-          <div className="grid grid-cols-2 md:grid-cols-4 mb-16">
-            {stats.map((s, i) => (
-              <div
-                key={s.label}
-                className={`border border-border px-5 py-6 md:py-8 bg-card ${
-                  i > 0 ? '-ml-px' : ''
-                } ${i > 1 ? 'md:ml-0 md:-ml-px' : ''}`}
-              >
-                <div className="display-lg text-foreground">{s.value}</div>
-                <div className="mt-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-                  {s.label}
+          {/* Stats strip — single outer border, thin 1px dividers via gap-px on
+             a bg-border background. Keeps cells from overlapping and clipping
+             the big numerals. */}
+          <div className="mb-16 border border-border bg-border">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  className="bg-card px-5 py-6 md:py-8 overflow-hidden"
+                >
+                  <div className="font-display font-black uppercase leading-none text-foreground whitespace-nowrap tracking-[-0.02em]" style={{ fontSize: 'clamp(1.75rem, 4vw, 3.25rem)' }}>
+                    {s.value}
+                  </div>
+                  <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                    {s.label}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Roster grid */}
