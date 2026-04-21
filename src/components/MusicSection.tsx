@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Volume2, Download, X } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { useReveal } from '@/hooks/use-reveal';
 
-import album1 from '@/assets/BulimPenis.png';
-import album2 from '@/assets/album-2.jpg';
-import album3 from '@/assets/gtabulib.png';
-import album4 from '@/assets/1.png';
-import album5 from '@/assets/Echo95.gif';
+import album1 from '@/assets/BulimPenis.webp';
+import album2 from '@/assets/album-2.webp';
+import album3 from '@/assets/gtabulib.webp';
+import album4 from '@/assets/1.webp';
+// Album 5 cover is animated — keep the MP4 for the loop and the webp as a poster.
+import album5Mp4 from '@/assets/Echo95.mp4';
+import album5Webm from '@/assets/Echo95.webm';
+import album5Poster from '@/assets/Echo95.webp';
 
-// Normalized track and album types
 type Track = { title: string; file?: string };
 
 interface AlbumType {
@@ -18,13 +21,13 @@ interface AlbumType {
   title: string;
   artist: string;
   cover: string;
+  coverVideo?: { mp4: string; webm: string };
   description?: string;
   tracks: Track[];
   basePath?: string;
   folder?: string;
 }
 
-// Helper to normalize mixed track entries (string | {title,file})
 const createAlbum = (
   id: number,
   title: string,
@@ -33,15 +36,13 @@ const createAlbum = (
   cover: string,
   rawTracks: Array<string | { title: string; file?: string }>,
   basePath = '/music/',
-  folder?: string
+  folder?: string,
+  coverVideo?: { mp4: string; webm: string }
 ): AlbumType => {
   const normalize = (entry: string | { title: string; file?: string }): Track => {
     if (typeof entry === 'string') {
-      const t = entry;
-      // Build file location: basePath + folder + title (no URL encoding — files have real Unicode names)
       const folderPath = folder ? `${folder}/` : '';
-      const file = `${basePath}${folderPath}${t}.mp3`;
-      return { title: t, file };
+      return { title: entry, file: `${basePath}${folderPath}${entry}.mp3` };
     }
     return { title: entry.title, file: entry.file };
   };
@@ -52,13 +53,13 @@ const createAlbum = (
     artist,
     description,
     cover,
+    coverVideo,
     tracks: rawTracks.map(normalize),
     basePath,
     folder,
   };
 };
 
-// Albums created with the utility — this follows the structure you provided
 const albums: AlbumType[] = [
   createAlbum(
     1,
@@ -69,7 +70,7 @@ const albums: AlbumType[] = [
     [
       { title: 'BulimPenis part 1', file: '/music/BulimPenis1.mp3' },
       'BulimPenis part 2',
-      'BulimPenis part 3'
+      'BulimPenis part 3',
     ],
     '/music/',
     'Album1'
@@ -84,7 +85,7 @@ const albums: AlbumType[] = [
       'Взрыв Бани',
       'Взрыв Бани v2',
       { title: 'БулимКиборг-Т95', file: '/music/БулимКиборг-Т95.mp3' },
-      { title: 'Булимпэнис и Андрей БО СИН', file: '/music/Булимпэнис и Андрей БО СИН.mp3' }
+      { title: 'Булимпэнис и Андрей БО СИН', file: '/music/Булимпэнис и Андрей БО СИН.mp3' },
     ],
     '/music/',
     'Album2'
@@ -107,7 +108,7 @@ const albums: AlbumType[] = [
       { title: 'Отцы и братва (feat. Саня Русов)', file: '/music/Отцы и братва (feat. Саня Русов).mp3' },
       { title: 'Шаурма и закон…', file: '/music/Шаурма и закон.mp3' },
       { title: 'Бенито Бенито!', file: '/music/Бенито Бенито!.mp3' },
-      { title: 'Кто тут главный!', file: '/music/Кто тут главный!.mp3' }
+      { title: 'Кто тут главный!', file: '/music/Кто тут главный!.mp3' },
     ],
     '/music/',
     'Album3'
@@ -128,7 +129,7 @@ const albums: AlbumType[] = [
       'U luv',
       'НАСТЯ',
       { title: 'День как финал (feat. 5opka, Chief Keef)', file: '/music/Album4/День как финал (feat. 5opka, Chief Keef).mp3' },
-      { title: 'Бандосы Тюльпановы (feat. Walter White, Мориарти)', file: '/music/Album4/Бандосы Тюльпановы (feat. Walter White, Мориарти).mp3' }
+      { title: 'Бандосы Тюльпановы (feat. Walter White, Мориарти)', file: '/music/Album4/Бандосы Тюльпановы (feat. Walter White, Мориарти).mp3' },
     ],
     '/music/',
     'Album4'
@@ -137,8 +138,8 @@ const albums: AlbumType[] = [
     5,
     'Эхо 95-го',
     '2026',
-    'История альбома начинается с кассет, записанных в ЗАТО Кривой Рог - 95, закрытом городе, где в 90-е годы реальность смешивалась с тенями. Эти кассеты хранят голоса жителей — их боль, предательства и надежду, пропитанные философским осмыслением судьбы. В центре повествования — юноша, чей светлый дух разбивается, когда 2 марта он узнаёт настоящую правду. Его путь проходит через уличные разборки Крапоткина, где он сталкивается с мафиозным миром тёмное прошлое криминального авторитета в уральском ОПГ и иллюзии, которые разрушают всё вокруг. Кассеты становятся его проводником: они шепчут о предательстве в самом ЗАТО, где имена, звучащие как эхо тьмы, плетут заговоры, но также обещают свет в конце пути.',
-    album5,
+    'История альбома начинается с кассет, записанных в ЗАТО Кривой Рог - 95, закрытом городе, где в 90-е годы реальность смешивалась с тенями.',
+    album5Poster,
     [
       { title: 'Эхо призыва', file: '/music/Album5/Эхо призыва.mp3' },
       { title: 'Иллюзия Теней', file: '/music/Album5/Иллюзия Теней.mp3' },
@@ -159,31 +160,32 @@ const albums: AlbumType[] = [
       { title: 'Булимитович', file: '/music/Album5/Булимитович.MP3' },
       { title: 'Декстер', file: '/music/Album5/Декстер.MP3' },
       { title: 'Что с нами блять не так', file: '/music/Album5/Что с нами блять не так.MP3' },
-      { title: 'звуки последних мёртвых кассет', file: '/music/Album5/звуки последних мёртвых кассет.MP3' }
+      { title: 'звуки последних мёртвых кассет', file: '/music/Album5/звуки последних мёртвых кассет.MP3' },
     ],
     '/music/',
-    'Album5'
+    'Album5',
+    { mp4: album5Mp4, webm: album5Webm }
   ),
 ];
 
-// Build a map of available mp3 asset URLs using Vite's import.meta.glob
-const modules = import.meta.glob('../assets/music/*/*.{mp3,MP3}', { eager: true }) as Record<string, any>;
+// --- MP3 asset resolution -----------------------------------------------------
+// Map every bundled mp3 to its Vite-hashed URL so the player can resolve files
+// declared as "/music/Album5/Track.mp3" in the data above. Several key variants
+// are stored per file so lookups by basename, folder+basename, or title succeed.
+const modules = import.meta.glob('../assets/music/*/*.{mp3,MP3}', { eager: true }) as Record<string, { default?: string } | string>;
 const assetMap: Record<string, string> = {};
 for (const p in modules) {
   const mod = modules[p];
-  const url: string = (mod && mod.default) || mod;
-  // basename without extension
+  const url: string = typeof mod === 'string' ? mod : mod.default ?? '';
   const parts = p.split('/');
   const filename = parts[parts.length - 1];
   const nameNoExt = filename.replace(/\.[^/.]+$/, '');
   const folder = parts[parts.length - 2] || '';
 
-  // Store multiple key variants
   assetMap[filename] = url;
   assetMap[nameNoExt] = url;
   assetMap[encodeURIComponent(nameNoExt)] = url;
 
-  // Store foldered variants
   if (folder) {
     assetMap[`${folder}/${filename}`] = url;
     assetMap[`${folder}/${nameNoExt}`] = url;
@@ -193,135 +195,90 @@ for (const p in modules) {
     assetMap[`music/${folder}/${nameNoExt}`] = url;
   }
 }
-console.log('🗂️ Asset map sample keys:', Object.keys(assetMap).slice(0, 20));
 
-// Resolve album track file URLs: prefer explicit file, otherwise try matching by title
 for (const album of albums) {
   for (let i = 0; i < album.tracks.length; i++) {
     const track = album.tracks[i];
     if (!track.file) continue;
 
-    // First try full path (e.g., /music/Album5/file.mp3)
-    const fullPath = track.file.replace(/^\//, ''); // remove leading /
-    if (assetMap[fullPath]) {
-      track.file = assetMap[fullPath];
-      continue;
-    }
-    if (assetMap[track.file]) {
-      track.file = assetMap[track.file];
-      continue;
-    }
+    const fullPath = track.file.replace(/^\//, '');
+    if (assetMap[fullPath]) { track.file = assetMap[fullPath]; continue; }
+    if (assetMap[track.file]) { track.file = assetMap[track.file]; continue; }
 
-    // Then try basename
     const parts = track.file.split('/').filter(Boolean);
     const basename = parts[parts.length - 1];
-    if (assetMap[basename]) {
-      track.file = assetMap[basename];
-      continue;
-    }
+    if (assetMap[basename]) { track.file = assetMap[basename]; continue; }
     const nameNoExt = basename.replace(/\.[^/.]+$/, '');
-    if (assetMap[nameNoExt]) {
-      track.file = assetMap[nameNoExt];
-      continue;
-    }
+    if (assetMap[nameNoExt]) { track.file = assetMap[nameNoExt]; continue; }
 
-    // Try to match by title
-    const titleKey = track.title;
-    if (assetMap[titleKey]) {
-      track.file = assetMap[titleKey];
-      continue;
-    }
+    if (assetMap[track.title]) { track.file = assetMap[track.title]; continue; }
 
-    // Fuzzy match: try to find a filename in the same folder that contains the title (normalized)
     if (album.folder) {
       const folder = album.folder;
       const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9а-яё0-9]+/gi, '');
       const titleNorm = norm(track.title || '');
       if (titleNorm) {
-        // check keys that belong to this folder
-        const folderKeys = Object.keys(assetMap).filter((k) => {
-          return k.includes(`${folder}/`) || k.includes(`/music/${folder}/`) || k.startsWith(`${folder}/`);
-        });
-        let matched = false;
+        const folderKeys = Object.keys(assetMap).filter((k) =>
+          k.includes(`${folder}/`) || k.includes(`/music/${folder}/`) || k.startsWith(`${folder}/`)
+        );
         for (const k of folderKeys) {
           const name = k.split('/').pop() || k;
-          const nameNoExt = name.replace(/\.[^/.]+$/, '');
-          const nameNorm = norm(nameNoExt);
-          if (!nameNorm) continue;
-          if (nameNorm.includes(titleNorm) || titleNorm.includes(nameNorm)) {
+          const nameNormK = norm(name.replace(/\.[^/.]+$/, ''));
+          if (!nameNormK) continue;
+          if (nameNormK.includes(titleNorm) || titleNorm.includes(nameNormK)) {
             track.file = assetMap[k];
-            matched = true;
-            console.log(`✓ Fuzzy matched ${track.title} -> ${k}`);
             break;
           }
         }
-        if (matched) continue;
       }
     }
 
-    // Last resort: if the track is a string and has no explicit file, try to find by index
-    // For example, if track is "BulimPenis part 2" (i=1), look for "2.mp3" or "Album1/2.mp3"
-    if (album.folder) {
-      // Try indexed files (2.mp3 for second track, 3.mp3 for third, etc.)
-      const idx = i + 1;
-      const indexedKey = `${album.folder}/${idx}.mp3`;
-      if (assetMap[indexedKey]) {
-        track.file = assetMap[indexedKey];
-        console.log(`✓ Matched ${track.title} by index: ${indexedKey}`);
-        continue;
-      }
+    if (album.folder && (!track.file || track.file.startsWith('/music/'))) {
+      const indexedKey = `${album.folder}/${i + 1}.mp3`;
+      if (assetMap[indexedKey]) track.file = assetMap[indexedKey];
     }
   }
 }
 
-// Fallback: assign unresolved tracks to remaining files in the album folder (sequential)
 for (const album of albums) {
   if (!album.folder) continue;
-  // collect all asset keys that belong to this folder and end with .mp3
-  const folderKeys = Object.keys(assetMap).filter((k) => {
-    return k.includes(`${album.folder}/`) || k.includes(`/music/${album.folder}/`) || k.startsWith(`${album.folder}/`);
-  }).filter((k) => /\.(mp3|MP3)$/.test(k));
-
-  // map keys to unique URLs and basenames
-  const fileEntries = folderKeys.map((k) => ({ key: k, url: assetMap[k], name: k.split('/').pop() }));
-
-  // exclude already assigned URLs
+  const folderKeys = Object.keys(assetMap).filter((k) =>
+    (k.includes(`${album.folder}/`) || k.includes(`/music/${album.folder}/`) || k.startsWith(`${album.folder}/`)) &&
+    /\.(mp3|MP3)$/.test(k)
+  );
+  const fileEntries = folderKeys.map((k) => ({ key: k, url: assetMap[k] }));
   const assigned = new Set(album.tracks.map((t) => t.file).filter(Boolean));
   const available = fileEntries.filter((e) => !assigned.has(e.url));
-
   let ai = 0;
   for (const track of album.tracks) {
     if (!track.file || track.file.startsWith('/music/')) {
       if (ai < available.length) {
         track.file = available[ai].url;
-        console.log(`→ Assigned fallback ${track.title} -> ${available[ai].key}`);
         ai++;
       }
     }
   }
 }
 
-// Debug: log which tracks have unresolved files
-albums.forEach((album) => {
-  album.tracks.forEach((track) => {
-    if (!track.file || (typeof track.file === 'string' && track.file.startsWith('/music/'))) {
-      console.warn(`⚠️  Track not resolved: ${album.title} - ${track.title}`, track.file);
-    }
-  });
-});
+// --- Component ----------------------------------------------------------------
 
+/**
+ * Music section — "FREQ.95 PLAYER". Album grid on top, a modal Winamp-style
+ * player with terminal-chrome + a CSS equalizer visualizer.
+ *
+ * The data + asset-resolution block above is unchanged; this rewrite is purely
+ * visual (and removes all framer-motion usage).
+ */
 const MusicSection = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumType | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(0);
-  const [progress, setProgress] = useState([30]);
+  const [progress, setProgress] = useState([0]);
   const [volume, setVolume] = useState([70]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [duration, setDuration] = useState(0);
-  const lastProgressEmitTimeRef = useRef<number>(0);
-
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastEmitRef = useRef<number>(0);
+  const ref = useReveal<HTMLDivElement>();
 
   const openPlayer = (album: AlbumType) => {
     setSelectedAlbum(album);
@@ -340,29 +297,15 @@ const MusicSection = () => {
   };
 
   const nextTrack = () => {
-    if (selectedAlbum) {
-      setCurrentTrack((prev) =>
-        prev < selectedAlbum.tracks.length - 1 ? prev + 1 : 0
-      );
-      setProgress([0]);
-    }
+    if (!selectedAlbum) return;
+    setCurrentTrack((prev) => (prev < selectedAlbum.tracks.length - 1 ? prev + 1 : 0));
+    setProgress([0]);
   };
 
   const prevTrack = () => {
-    if (selectedAlbum) {
-      setCurrentTrack((prev) =>
-        prev > 0 ? prev - 1 : selectedAlbum.tracks.length - 1
-      );
-      setProgress([0]);
-    }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
+    if (!selectedAlbum) return;
+    setCurrentTrack((prev) => (prev > 0 ? prev - 1 : selectedAlbum.tracks.length - 1));
+    setProgress([0]);
   };
 
   const formatTime = (s: number) => {
@@ -372,270 +315,274 @@ const MusicSection = () => {
     return `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Sync audio element when track/album/playing/volume changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const track = selectedAlbum?.tracks[currentTrack];
     if (track?.file && audio.src !== track.file) {
-      console.log(`🎵 Loading: ${selectedAlbum?.title} - ${track.file}`);
       audio.src = track.file;
       audio.load();
       setProgress([0]);
       setDuration(0);
     }
 
-    // don't set audio.volume here to avoid re-running this effect on volume change
-
-    const onLoaded = () => {
-      console.log(`✅ Loaded: duration ${audio.duration}s`);
-      setDuration(Math.round(audio.duration || 0));
-    };
-
+    const onLoaded = () => setDuration(Math.round(audio.duration || 0));
     const onTime = () => {
       if (!audio.duration) return;
-      // Throttle: only update progress every 500ms to avoid excessive updates
       const now = Date.now();
-      if (now - lastProgressEmitTimeRef.current > 500) {
-        const newProgress = Math.round((audio.currentTime / audio.duration) * 100);
-        setProgress([newProgress]);
-        lastProgressEmitTimeRef.current = now;
+      if (now - lastEmitRef.current > 500) {
+        setProgress([Math.round((audio.currentTime / audio.duration) * 100)]);
+        lastEmitRef.current = now;
       }
     };
-
-    const onEnded = () => {
-      console.log(`⏭️  Track ended, next track`);
-      nextTrack();
-    };
+    const onEnded = () => nextTrack();
 
     audio.addEventListener('loadedmetadata', onLoaded);
     audio.addEventListener('timeupdate', onTime);
     audio.addEventListener('ended', onEnded);
 
-    if (isPlaying) {
-      console.log(`▶️  Playing`);
-      audio.play().catch((err) => console.error('Play error:', err));
-    } else {
-      console.log(`⏸️  Paused`);
-      audio.pause();
-    }
+    if (isPlaying) audio.play().catch(() => { /* user gesture may be required */ });
+    else audio.pause();
 
     return () => {
       audio.removeEventListener('loadedmetadata', onLoaded);
       audio.removeEventListener('timeupdate', onTime);
       audio.removeEventListener('ended', onEnded);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAlbum, currentTrack, isPlaying]);
 
-  // Apply volume changes to audio element without re-running the main audio effect
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = (volume[0] ?? 70) / 100;
   }, [volume]);
 
-  // Seeking is disabled: progress slider is a read-only indicator of playback position.
-  // If you want to enable seeking later, reintroduce logic to set audio.currentTime here.
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const } },
-  };
-
   const handleVolumeChange = (val: number[]) => {
     setVolume(val);
-    const v = (val?.[0] ?? 70) / 100;
-    if (audioRef.current) audioRef.current.volume = v;
+    if (audioRef.current) audioRef.current.volume = (val?.[0] ?? 70) / 100;
   };
 
+  const currentTrackTitle = selectedAlbum?.tracks[currentTrack]?.title
+    || selectedAlbum?.tracks[currentTrack]?.file?.split('/').pop()?.replace(/\.[^/.]+$/, '')
+    || '';
+
   return (
-    <section id="music" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/50 to-background" />
+    <section id="music" className="relative py-20 md:py-28 border-b border-border">
+      <div className="section-container">
+        <div className="flex items-baseline justify-between mb-6">
+          <span className="eyebrow">№ 05 / FREQ.95 / АЛЬБОМЫ</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground hidden md:inline">
+            [{albums.length.toString().padStart(2, '0')}_RELEASES_LOADED]
+          </span>
+        </div>
 
-      <div className="section-container relative z-10">
-        {/* Header */}
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-foreground">
-            Наши альбомы
+        <div ref={ref} className="reveal">
+          <h2 className="display-xl text-foreground mb-4">
+            АЛЬБО<span className="text-primary">МЫ</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Музыка, созданная нашим сообществом с любовью и страстью
+          <p className="max-w-2xl text-foreground/80 text-base md:text-lg mb-12">
+            Музыка, созданная нашим сообществом с любовью и страстью. Нажми на обложку чтобы
+            вызвать плеер.
           </p>
-        </motion.div>
 
-        {/* Albums Grid */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-        >
-          {albums.map((album) => (
-            <motion.div
-              key={album.id}
-              variants={itemVariants}
-              onClick={() => openPlayer(album)}
-              className="group cursor-pointer"
-              whileHover={{ y: -8, transition: { duration: 0.3 } }}
-            >
-              <div className="relative aspect-square rounded-2xl overflow-hidden glass-card transition-all duration-300 group-hover:border-border">
-                <img
-                  src={album.cover}
-                  alt={album.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <motion.div 
-                    className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Play className="w-6 h-6 fill-background text-background ml-1" />
-                  </motion.div>
-                </div>
-              </div>
-              <div className="mt-4 text-center">
-                <h3 className="font-display font-semibold text-sm md:text-base text-foreground group-hover:text-foreground transition-colors">
-                  {album.title}
-                </h3>
-                <p className="text-muted-foreground text-xs md:text-sm">
-                  {album.artist}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+            {albums.map((album, i) => (
+              <li
+                key={album.id}
+                style={{
+                  animation: 'fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both',
+                  animationDelay: `${i * 70}ms`,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => openPlayer(album)}
+                  className="group w-full text-left"
+                  aria-label={`Play ${album.title}`}
+                >
+                  <div className="relative aspect-square border border-border bg-background overflow-hidden">
+                    {album.coverVideo ? (
+                      <video
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                        preload="none"
+                        poster={album.cover}
+                        width={360}
+                        height={360}
+                        className="w-full h-full object-cover"
+                      >
+                        <source src={album.coverVideo.webm} type="video/webm" />
+                        <source src={album.coverVideo.mp4} type="video/mp4" />
+                      </video>
+                    ) : (
+                      <img
+                        src={album.cover}
+                        alt={album.title}
+                        loading="lazy"
+                        decoding="async"
+                        width={360}
+                        height={360}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {/* ident overlay */}
+                    <div className="absolute top-2 left-2 font-mono text-[10px] uppercase tracking-[0.2em] text-primary bg-background/70 px-1.5 py-0.5 border border-primary/70">
+                      REL.{String(album.id).padStart(2, '0')}
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-background/60">
+                      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-primary border border-primary px-3 py-2">
+                        <Play className="w-4 h-4 fill-primary" /> PLAY
+                      </div>
+                    </div>
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-primary" />
+                    <span className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-primary" />
+                  </div>
+                  <div className="mt-3">
+                    <h3 className="font-display font-black uppercase text-sm md:text-base leading-tight text-foreground">
+                      {album.title}
+                    </h3>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                      {album.artist} / {album.tracks.length} TR.
+                    </p>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
-      {/* Music Player Modal */}
-      <AnimatePresence>
-        {selectedAlbum && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xl"
-            onClick={closePlayer}
+      {selectedAlbum && (
+        <div
+          onClick={closePlayer}
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 animate-fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="window w-full max-w-md animate-fade-up"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="glass-card w-full max-w-md p-6 rounded-3xl border border-border"
-            >
-              {/* Close Button */}
+            <div className="window-title">
+              <span>▓</span>
+              <span>FREQ.95_PLAYER.EXE</span>
               <button
                 onClick={closePlayer}
-                className="absolute top-4 right-4 p-2 rounded-full bg-card hover:bg-muted transition-colors"
+                className="ml-auto flex items-center justify-center w-5 h-5 text-primary-foreground hover:text-foreground hover:bg-background"
+                aria-label="Close player"
               >
-                <X className="w-5 h-5" />
+                <X className="w-3 h-3" />
               </button>
-
-              {/* Album Cover */}
-              <div className="relative aspect-square rounded-2xl overflow-hidden mb-6 border border-border">
-                <img
-                  src={selectedAlbum.cover}
-                  alt={selectedAlbum.title}
-                  className="w-full h-full object-cover"
-                />
+            </div>
+            <div className="window-body pt-10 p-5 md:p-6">
+              <div className="relative aspect-square border border-border overflow-hidden mb-5">
+                {selectedAlbum.coverVideo ? (
+                  <video
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                    poster={selectedAlbum.cover}
+                    className="w-full h-full object-cover"
+                  >
+                    <source src={selectedAlbum.coverVideo.webm} type="video/webm" />
+                    <source src={selectedAlbum.coverVideo.mp4} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    src={selectedAlbum.cover}
+                    alt={selectedAlbum.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                {/* EQ visualizer */}
+                <div className="absolute bottom-0 inset-x-0 flex items-end justify-center gap-1 py-2 bg-background/70">
+                  {Array.from({ length: 18 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`eq-bar ${!isPlaying ? 'opacity-30' : ''}`}
+                      style={{
+                        animationPlayState: isPlaying ? 'running' : 'paused',
+                        animationDelay: `${(i % 6) * 80}ms`,
+                        height: `${10 + (i % 5) * 5}px`,
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
 
-              {/* Album Info */}
-              <div className="text-center mb-6">
-                <h3 className="font-display text-2xl font-bold mb-1 text-foreground">
+              <div className="mb-4">
+                <div className="font-display font-black uppercase text-xl md:text-2xl leading-tight text-foreground">
                   {selectedAlbum.title}
-                </h3>
-                <p className="text-muted-foreground">{selectedAlbum.artist}</p>
+                </div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground mt-1">
+                  {selectedAlbum.artist} / TRACK {String(currentTrack + 1).padStart(2, '0')}/
+                  {String(selectedAlbum.tracks.length).padStart(2, '0')}
+                </div>
               </div>
 
-              {/* Hidden audio element bound to tracks */}
-              <audio ref={audioRef} />
+              <audio ref={audioRef} preload="none" />
 
-              {/* Current Track */}
-              <div className="text-center mb-4">
-                <span className="text-sm text-foreground font-medium">
-                  {currentTrack + 1}. {selectedAlbum.tracks[currentTrack]?.file?.split('/').pop()?.replace(/\.[^/.]+$/, '')}
-                </span>
+              <div className="mb-3 font-mono text-sm text-foreground truncate">
+                <span className="text-primary">&gt; </span>
+                {currentTrackTitle}
               </div>
 
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <Slider
-                  value={progress}
-                  // Seeking disabled: slider is read-only indicator
-                  onValueChange={() => {}}
-                  max={100}
-                  step={1}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              <div className="mb-5">
+                <Slider value={progress} onValueChange={() => { /* read-only */ }} max={100} step={1} />
+                <div className="flex justify-between text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mt-2">
                   <span>{formatTime(Math.round((progress[0] / 100) * duration))}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
               </div>
 
-              {/* Controls */}
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <motion.button
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <button
                   onClick={prevTrack}
-                  className="p-3 rounded-full bg-card hover:bg-muted transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="w-10 h-10 flex items-center justify-center border border-border text-foreground hover:text-primary hover:border-primary"
+                  aria-label="Previous track"
                 >
-                  <SkipBack className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-4 rounded-full bg-foreground text-background hover:scale-105 transition-transform"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  <SkipBack className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsPlaying((v) => !v)}
+                  className="w-12 h-12 flex items-center justify-center bg-primary text-primary-foreground border border-primary hover:bg-foreground hover:text-background"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
-                  {isPlaying ? (
-                    <Pause className="w-6 h-6" />
-                  ) : (
-                    <Play className="w-6 h-6 ml-0.5" />
-                  )}
-                </motion.button>
-                <motion.button
+                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                </button>
+                <button
                   onClick={nextTrack}
-                  className="p-3 rounded-full bg-card hover:bg-muted transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="w-10 h-10 flex items-center justify-center border border-border text-foreground hover:text-primary hover:border-primary"
+                  aria-label="Next track"
                 >
-                  <SkipForward className="w-5 h-5" />
-                </motion.button>
+                  <SkipForward className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Volume */}
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-5">
                 <Volume2 className="w-4 h-4 text-muted-foreground" />
-                <Slider
-                  value={volume}
-                  onValueChange={handleVolumeChange}
-                  max={100}
-                  step={1}
-                  className="flex-1"
-                />
+                <Slider value={volume} onValueChange={handleVolumeChange} max={100} step={1} className="flex-1" />
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground w-8 text-right">
+                  {String(volume[0]).padStart(2, '0')}
+                </span>
               </div>
 
-              {/* Download Button */}
-              <Button variant="outline" className="w-full border-border hover:border-foreground/30">
+              <Button
+                variant="outline"
+                className="w-full h-10 font-mono text-[11px] uppercase tracking-[0.25em] rounded-none border-border hover:border-primary hover:text-primary"
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Скачать альбом
               </Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -1,14 +1,12 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useReveal } from '@/hooks/use-reveal';
 
-import andryhlyper from '@/assets/andryhlyper.jpg';
-import member2 from '@/assets/member-2.jpg';
-import vovan from '@/assets/Vovan.jpg';
-import member3 from '@/assets/Миха.png';
-import member4 from '@/assets/Bonedust.jpg';
-import Kalc from '@/assets/calci.png';
-import Bulim from '@/assets/Bul.png';
+import andryhlyper from '@/assets/andryhlyper.webp';
+import vovan from '@/assets/Vovan.webp';
+import miha from '@/assets/Миха.webp';
+import bonedust from '@/assets/Bonedust.webp';
+import kalc from '@/assets/calci.webp';
+import bulim from '@/assets/Bul.webp';
+
 interface MemberCard {
   name: string;
   role: string;
@@ -33,25 +31,25 @@ const memberCards: MemberCard[] = [
     name: 'Михал Палыч',
     role: 'Главнный десигнер',
     description: 'Создал шедевральные аватарки для канала и сервера ФСР.',
-    avatar: member3,
+    avatar: miha,
   },
   {
     name: 'Бон Даст',
     role: 'Главный работяга',
     description: 'Работает в Гринвиче днями и ночами.',
-    avatar: member4,
+    avatar: bonedust,
   },
   {
     name: 'Булимень',
     role: 'Гроза Ставрополя',
     description: 'Уже больше года должен Докичу 100 рублей и теперь боится его приезда.',
-    avatar: Bulim,
+    avatar: bulim,
   },
   {
     name: 'Кальций',
     role: 'Спидранер греньки',
     description: 'Бог скорости, пвп ящер и замечательный актёр в общем кальций.',
-    avatar: Kalc,
+    avatar: kalc,
   },
 ];
 
@@ -62,111 +60,95 @@ const stats = [
   { value: '24/7', label: 'Завозы' },
 ];
 
+/**
+ * Roster section. Stats are rendered as hard-edged brutalist blocks with an
+ * offset shadow; members are laid out as a grid of "dossier" cards whose
+ * photos hang in a thin viewfinder frame. IntersectionObserver staggers the
+ * fade-up via a CSS transition so we don't import framer-motion.
+ */
 const AboutSection = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const } },
-  };
+  const ref = useReveal<HTMLDivElement>();
 
   return (
-    <section id="about" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-card via-background to-background" />
+    <section id="about" className="relative py-20 md:py-28 border-b border-border">
+      <div className="section-container">
+        <div className="flex items-baseline justify-between mb-6">
+          <span className="eyebrow">№ 02 / РОСТЕР</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground hidden md:inline">
+            [06_LOGGED_ON_AIR]
+          </span>
+        </div>
 
-      <div className="section-container relative z-10">
-        {/* Header */}
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-foreground">
-            О нас
+        <div ref={ref} className="reveal">
+          <h2 className="display-xl text-foreground mb-4">
+            О&nbsp;НАС<span className="text-primary">.</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Самые завозные и активные братухи которые сделали большой вклад в развитие ФСР.
+          <p className="max-w-2xl text-foreground/80 text-base md:text-lg mb-12">
+            Самые завозные и активные братухи которые сделали большой вклад в
+            развитие ФСР.
           </p>
-        </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-        >
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="text-center p-6 glass-card rounded-2xl hover:border-border transition-colors"
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            >
-              <div className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-                {stat.value}
-              </div>
-              <div className="text-muted-foreground text-sm">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Member Cards Grid */}
-        <motion.div
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-        >
-          {memberCards.map((member, index) => (
-            <motion.div
-              key={member.name}
-              variants={itemVariants}
-              className="group"
-              whileHover={{ y: -8, transition: { duration: 0.3 } }}
-            >
-              <div className="glass-card p-6 rounded-2xl h-full transition-all duration-300 hover:border-border">
-                <motion.div 
-                  className="relative w-20 h-20 mx-auto mb-4"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="relative w-full h-full object-cover rounded-full border-2 border-border group-hover:border-foreground/30 transition-colors"
-                  />
-                </motion.div>
-                <div className="text-center">
-                  <h3 className="font-display font-bold text-lg mb-1 text-foreground group-hover:text-foreground transition-colors">
-                    {member.name}
-                  </h3>
-                  <span className="inline-block px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium mb-3 border border-border/50">
-                    {member.role}
-                  </span>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {member.description}
-                  </p>
+          {/* Stats strip */}
+          <div className="grid grid-cols-2 md:grid-cols-4 mb-16">
+            {stats.map((s, i) => (
+              <div
+                key={s.label}
+                className={`border border-border px-5 py-6 md:py-8 bg-card ${
+                  i > 0 ? '-ml-px' : ''
+                } ${i > 1 ? 'md:ml-0 md:-ml-px' : ''}`}
+              >
+                <div className="display-lg text-foreground">{s.value}</div>
+                <div className="mt-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                  {s.label}
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
+            ))}
+          </div>
+
+          {/* Roster grid */}
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
+            {memberCards.map((m, i) => (
+              <li
+                key={m.name}
+                className="block p-5 md:p-6"
+                style={{
+                  animation: 'fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both',
+                  animationDelay: `${i * 60}ms`,
+                }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="relative w-20 h-20 md:w-24 md:h-24 shrink-0 border border-border bg-background overflow-hidden">
+                    <img
+                      src={m.avatar}
+                      alt={m.name}
+                      loading="lazy"
+                      decoding="async"
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-primary" />
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-primary" />
+                    <span className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-primary" />
+                    <span className="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary mb-1">
+                      № {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <h3 className="font-display font-black uppercase text-lg md:text-xl leading-none text-foreground mb-2">
+                      {m.name}
+                    </h3>
+                    <div className="chip chip-primary mb-3">{m.role}</div>
+                    <p className="text-foreground/70 text-sm leading-relaxed">
+                      {m.description}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

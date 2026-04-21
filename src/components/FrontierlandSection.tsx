@@ -1,148 +1,171 @@
-import { useState, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import minecraft1 from '@/assets/FL1.png';
-import minecraft2 from '@/assets/FL2.png';
-import minecraft3 from '@/assets/FL3.png';
+import { useReveal } from '@/hooks/use-reveal';
 
-const screenshots = [minecraft1, minecraft2, minecraft3];
+import minecraft1 from '@/assets/FL1.webp';
+import minecraft2 from '@/assets/FL2.webp';
+import minecraft3 from '@/assets/FL3.webp';
 
+const screenshots = [
+  { src: minecraft1, label: 'MAP_ALPHA' },
+  { src: minecraft2, label: 'MGE_DUEL' },
+  { src: minecraft3, label: 'SPIDRAN' },
+];
+
+const features = [
+  {
+    icon: '🏰',
+    title: 'Эпические спидраны',
+    desc: 'В 1 секунду существования сервера кальций уже будет ходить в незерке',
+  },
+  {
+    icon: '⚔️',
+    title: 'MGE срачи',
+    desc: 'Пиздиловка из за маленького писюна... ОУ ДА!!!',
+  },
+  {
+    icon: '🤝',
+    title: 'Админ завозит',
+    desc: 'Админ бывает даёт ёбу и начинается ужас',
+  },
+];
+
+/**
+ * Frontierland broadcast feed. Screenshots are framed like a TV monitor with
+ * station ident overlays (timestamp / channel / REC). We lazy-load the two
+ * offscreen images and only decode the active one synchronously.
+ */
 const FrontierlandSection = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const [slide, setSlide] = useState(0);
+  const ref = useReveal<HTMLDivElement>();
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % screenshots.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) =>
-      prev === 0 ? screenshots.length - 1 : prev - 1
-    );
-  };
+  const next = () => setSlide((s) => (s + 1) % screenshots.length);
+  const prev = () => setSlide((s) => (s === 0 ? screenshots.length - 1 : s - 1));
 
   return (
-    <section id="frontierland" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Background with subtle purple glow - KEPT for Frontierland */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background to-card/50" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-10 pointer-events-none">
-        <div className="w-full h-full bg-gradient-radial from-primary/30 via-primary/10 to-transparent" />
-      </div>
+    <section id="frontierland" className="relative py-20 md:py-28 border-b border-border">
+      <div className="section-container">
+        <div className="flex items-baseline justify-between mb-6">
+          <span className="eyebrow">№ 04 / FEED</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            [FRONTIERLAND_MC]
+          </span>
+        </div>
 
-      <div className="section-container relative z-10">
-        {/* Header - with purple accent for Frontierland */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            <span className="text-gradient">Frontierland</span>
+        <div ref={ref} className="reveal">
+          <h2 className="display-xl text-foreground mb-4">
+            FRONTIER<span className="text-primary">LAND</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Наш уникальный майнкрафт сервер, где каждый может навалить контенту и забить на него через неделю.
-            <span className="text-primary"> (Андрей - Лучший Админ)</span>
+          <p className="max-w-2xl text-foreground/80 text-base md:text-lg mb-10">
+            Наш уникальный майнкрафт сервер, где каждый может навалить контенту и забить на него
+            через неделю.
+            <span className="text-primary"> (Андрей — Лучший Админ)</span>
           </p>
-        </motion.div>
 
-        {/* Screenshot Carousel */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative max-w-5xl mx-auto"
-        >
-          <div className="relative aspect-video rounded-2xl overflow-hidden glass-card border border-primary/20">
-            {screenshots.map((screenshot, index) => (
-              <motion.img
-                key={index}
-                src={screenshot}
-                alt={`Frontierland screenshot ${index + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: index === currentSlide ? 1 : 0 }}
-                transition={{ duration: 0.5 }}
-              />
-            ))}
+          {/* Monitor */}
+          <div className="relative max-w-5xl mx-auto">
+            <div className="window">
+              <div className="window-title">
+                <span>▓</span>
+                <span>FEED_{slide + 1}_OF_{screenshots.length}.CAM</span>
+                <span className="ml-auto flex items-center gap-2 text-primary-foreground/90">
+                  <span className="on-air-dot" />
+                  <span>{screenshots[slide].label}</span>
+                  <span className="hidden md:inline">/ 00:{String(10 + slide * 7).padStart(2, '0')}:{String(slide * 12 + 2).padStart(2, '0')}</span>
+                </span>
+              </div>
+              <div className="window-body pt-7">
+                <div className="relative aspect-video bg-background overflow-hidden">
+                  {screenshots.map((s, i) => (
+                    <img
+                      key={i}
+                      src={s.src}
+                      alt={`Frontierland ${i + 1}`}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      width={1280}
+                      height={720}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                        i === slide ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    />
+                  ))}
+                  {/* Overlay chrome */}
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute top-3 left-3 font-mono text-[11px] uppercase tracking-[0.2em] text-primary drop-shadow">
+                      REC ● CH.04
+                    </div>
+                    <div className="absolute bottom-3 right-3 font-mono text-[11px] uppercase tracking-[0.2em] text-primary drop-shadow">
+                      {String(slide + 1).padStart(2, '0')}/{String(screenshots.length).padStart(2, '0')}
+                    </div>
+                    <div className="absolute bottom-3 left-3 right-16 md:right-auto md:max-w-md bg-background/80 border border-border p-3 md:p-4">
+                      <p className="text-sm md:text-base text-foreground leading-relaxed">
+                        Погрузитесь в мир конченных сборок. Стройте писюны, исспытывайте терпение
+                        админа, завозите контент в уникальной атмосфере нашего сервера.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* Navigation Arrows */}
-            <motion.button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 hover:border-primary/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </motion.button>
-            <motion.button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 hover:border-primary/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </motion.button>
-
-            {/* Bottom-left description */}
-            <motion.div 
-              className="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md p-4 rounded-xl bg-background/70 backdrop-blur-sm border border-border/50"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <p className="text-sm md:text-base text-foreground leading-relaxed">
-                Погрузитесь в мир конченных сборок. Стройте писюны, 
-                исспытывайте терпение админа, завозите контент 
-                в уникальной атмосфере нашего сервера.
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Dots - with purple accent */}
-          <div className="flex justify-center gap-2 mt-6">
-            {screenshots.map((_, index) => (
+            {/* Monitor controls */}
+            <div className="flex items-center justify-between mt-5">
               <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? 'bg-primary w-8'
-                    : 'bg-muted hover:bg-muted-foreground w-2.5'
-                }`}
-              />
-            ))}
+                onClick={prev}
+                className="flex items-center gap-2 px-3 py-2 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
+                aria-label="Previous screenshot"
+              >
+                <ChevronLeft className="w-4 h-4" /> PREV
+              </button>
+              <div className="flex items-center gap-2">
+                {screenshots.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSlide(i)}
+                    aria-label={`Screenshot ${i + 1}`}
+                    className={`h-1 transition-all duration-300 ${
+                      i === slide ? 'w-10 bg-primary' : 'w-6 bg-border'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={next}
+                className="flex items-center gap-2 px-3 py-2 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
+                aria-label="Next screenshot"
+              >
+                NEXT <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </motion.div>
 
-        {/* Features - with purple accents */}
-        <motion.div
-          className="grid md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {[
-            { icon: '🏰', title: 'Эпические спидраны', desc: 'В 1 секунду существования сервера кальций уже будет ходить в незерке' },
-            { icon: '⚔️', title: 'MGE срачи', desc: 'Пиздиловка из за маленького писюна... ОУ ДА!!!' },
-            { icon: '🤝', title: 'Админ завозит', desc: 'Админ бывает даёт ёбу и начинается ужас' },
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              className="glass-card p-6 rounded-2xl text-center hover:border-primary/30 transition-colors border border-border/50"
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-            >
-              <div className="text-4xl mb-3">{feature.icon}</div>
-              <h3 className="font-display font-semibold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm">{feature.desc}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+          {/* Feature cards */}
+          <ul className="grid md:grid-cols-3 gap-5 md:gap-6 mt-14 max-w-5xl mx-auto">
+            {features.map((f, i) => (
+              <li
+                key={f.title}
+                className="border border-border bg-card p-6"
+                style={{
+                  animation: 'fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both',
+                  animationDelay: `${200 + i * 80}ms`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-primary">
+                    № {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className="text-3xl" aria-hidden="true">{f.icon}</span>
+                </div>
+                <h3 className="font-display font-black uppercase text-lg md:text-xl text-foreground mb-2">
+                  {f.title}
+                </h3>
+                <p className="text-foreground/70 text-sm leading-relaxed">{f.desc}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

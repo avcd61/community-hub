@@ -1,83 +1,129 @@
-import { motion } from 'framer-motion';
-import { MousePointer } from 'lucide-react';
-import Andrew from '@/assets/Andrew.gif';
-import Brisha from '@/assets/Brisha.gif';
-import Dogh from '@/assets/Dogh.mp4';
+import { useRef } from 'react';
+import { ArrowUpRight, Volume2 } from 'lucide-react';
 
-interface PlaceholderProps {
-  onClick?: () => void;
-  href?: string;
-  className?: string;
-}
+import andrewMp4 from '@/assets/Andrew.mp4';
+import andrewWebm from '@/assets/Andrew.webm';
+import andrewPoster from '@/assets/Andrew.webp';
+import brishaMp4 from '@/assets/Brisha.mp4';
+import brishaWebm from '@/assets/Brisha.webm';
+import brishaPoster from '@/assets/Brisha.webp';
+import doghAudio from '@/assets/Dogh.mp4';
 
-const Placeholder = ({ src, onClick, href, className }: PlaceholderProps & { src?: string }) => {
-  return (  
-    <motion.button
-      onClick={() => {
-        if (onClick) return onClick();
-        if (href) window.open(href, '_blank');
-      }}
-      className={`group relative rounded-2xl overflow-hidden transition-all duration-300 ${className}`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.98 }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-    >
-      {src ? (
-        <img src={src} alt="GIF" className="w-full h-full object-cover rounded-2xl" />
-      ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-          <MousePointer className="w-6 h-6" />
-          <span className="text-xs font-medium">GIF / Image</span>
-        </div>
-      )}
-    </motion.button>
-  );
-};
+/**
+ * Two "terminal windows" that sit between the hero and the roster. They were
+ * originally huge GIF buttons — replaced with looping inline video (MP4 +
+ * WebM fallback) which shrinks the single Brisha.gif from 63 MB to ~500 KB.
+ *
+ * Left window plays an audio sting on click, right window opens the YouTube
+ * channel. Both are deferred on paint (`playsInline` + `autoPlay` without
+ * `preload="auto"`) so they don't compete with the hero for bandwidth.
+ */
+const andrewLink = 'https://www.youtube.com/@ФСР95';
 
 const InteractivePlaceholders = () => {
-  const andrewLink = 'https://www.youtube.com/@ФСР95';
- 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playDogh = () => {
+    if (!audioRef.current) {
+      const a = new Audio(doghAudio);
+      a.preload = 'none';
+      audioRef.current = a;
+    }
+    const a = audioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => { /* User might not have interacted yet; ignore. */ });
+  };
 
   return (
-    <section className="relative py-8 md:py-12">
-      {/* Background gradient - same as rest of site */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card" />
-      
-      <div className="section-container relative z-10">
-        <div className="flex justify-between items-center gap-20 md:gap-32 lg:gap-48">
-          {/* Left placeholder - positioned with offset from edge */}
-            <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="ml-4 md:ml-8"
-          >
-              <Placeholder
-                src={Brisha}
-                onClick={() => {
-                  const audio = new Audio(Dogh);
-                  audio.play();
-                }}
-              />
-          </motion.div>
+    <section className="relative py-14 md:py-20 border-b border-border">
+      <div className="section-container">
+        <div className="flex items-baseline justify-between mb-6">
+          <span className="eyebrow">
+            № 01 / ВЫЗОВ В ЭФИР
+          </span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            [TAP_TO_PLAY]
+          </span>
+        </div>
 
-          {/* Center space - can be used for decorative elements */}
-          <div className="flex-1" />
-
-          {/* Right placeholder - positioned with offset from edge */}
-            <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mr-4 md:mr-8"
+        <div className="grid md:grid-cols-2 gap-6 md:gap-10">
+          {/* Left: Brisha — clickable terminal window that plays audio */}
+          <button
+            type="button"
+            onClick={playDogh}
+            className="window text-left group block"
+            aria-label="Брыша — проиграть звук"
           >
-            <Placeholder src={Andrew} href={andrewLink} />
-          </motion.div>
+            <div className="window-title">
+              <span>▓</span>
+              <span>WND_01_BRISHA.VID</span>
+              <span className="ml-auto flex items-center gap-2">
+                <Volume2 className="w-3 h-3" />
+                <span className="on-air-dot" />
+              </span>
+            </div>
+            <div className="window-body pt-8 p-3">
+              <video
+                muted
+                loop
+                autoPlay
+                playsInline
+                preload="none"
+                poster={brishaPoster}
+                className="w-full aspect-square object-cover bg-background"
+                width={600}
+                height={600}
+              >
+                <source src={brishaWebm} type="video/webm" />
+                <source src={brishaMp4} type="video/mp4" />
+              </video>
+              <div className="mt-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span>// audio-trigger</span>
+                <span className="text-primary group-hover:text-foreground transition-colors">
+                  [ TAP ▸ ]
+                </span>
+              </div>
+            </div>
+          </button>
+
+          {/* Right: Andrew — link to YouTube */}
+          <a
+            href={andrewLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="window block group"
+          >
+            <div className="window-title">
+              <span>▓</span>
+              <span>WND_02_ANDREW.VID</span>
+              <span className="ml-auto flex items-center gap-2">
+                <ArrowUpRight className="w-3 h-3" />
+                <span className="on-air-dot" />
+              </span>
+            </div>
+            <div className="window-body pt-8 p-3">
+              <video
+                muted
+                loop
+                autoPlay
+                playsInline
+                preload="none"
+                poster={andrewPoster}
+                className="w-full aspect-square object-cover bg-background"
+                width={600}
+                height={600}
+              >
+                <source src={andrewWebm} type="video/webm" />
+                <source src={andrewMp4} type="video/mp4" />
+              </video>
+              <div className="mt-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span>// youtube.com/@фср95</span>
+                <span className="text-primary group-hover:text-foreground transition-colors">
+                  [ OPEN ▸ ]
+                </span>
+              </div>
+            </div>
+          </a>
         </div>
       </div>
     </section>

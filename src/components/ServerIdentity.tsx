@@ -1,78 +1,79 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useReveal } from '@/hooks/use-reveal';
 
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.webp';
 
+const tags = [
+  { emoji: '🎵', label: 'Музыка' },
+  { emoji: '🎮', label: 'Игры' },
+  { emoji: '🎨', label: 'Искусство' },
+  { emoji: '💬', label: 'Общение' },
+];
+
+/**
+ * Server identity / manifesto. Huge "95" numeral on the left (brutalist),
+ * Tatar manifesto paragraph on the right. The logo sits inside a viewfinder
+ * frame. Completely static — no animation runtime.
+ */
 const ServerIdentity = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const ref = useReveal<HTMLDivElement>();
 
   return (
-    <section id="server" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Subtle background - no purple glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-5">
-        <div className="w-full h-full bg-gradient-radial from-white/20 via-white/5 to-transparent" />
-      </div>
+    <section id="server" className="relative py-20 md:py-28 border-b border-border">
+      <div className="section-container">
+        <div className="flex items-baseline justify-between mb-6">
+          <span className="eyebrow">№ 03 / МАНИФЕСТ</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            [IDENT_CARD]
+          </span>
+        </div>
 
-      <div className="section-container relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
-          {/* Logo - no glow effects */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-            animate={isInView ? { opacity: 1, scale: 1, rotate: 0 } : {}}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="relative"
-            whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
-          >
-            <div className="relative w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80">
+        <div ref={ref} className="reveal grid lg:grid-cols-[auto_1fr] gap-10 lg:gap-16 items-center">
+          {/* Logo + giant "95" */}
+          <div className="relative flex items-center gap-6">
+            <div className="relative w-36 h-36 md:w-44 md:h-44 border border-border bg-card shrink-0">
               <img
                 src={logo}
-                alt="FSR-95 Logo"
-                className="w-full h-full object-contain"
+                alt="FSR-95"
+                className="w-full h-full object-contain p-4"
+                loading="lazy"
+                decoding="async"
+                width={200}
+                height={200}
               />
+              <span className="absolute -top-px -left-px w-3 h-3 border-t-2 border-l-2 border-primary" />
+              <span className="absolute -top-px -right-px w-3 h-3 border-t-2 border-r-2 border-primary" />
+              <span className="absolute -bottom-px -left-px w-3 h-3 border-b-2 border-l-2 border-primary" />
+              <span className="absolute -bottom-px -right-px w-3 h-3 border-b-2 border-r-2 border-primary" />
             </div>
-          </motion.div>
+            <div
+              className="font-display font-black uppercase leading-[0.8] text-primary select-none"
+              style={{ fontSize: 'clamp(6rem, 22vw, 18rem)', letterSpacing: '-0.05em' }}
+              aria-hidden="true"
+            >
+              95
+            </div>
+          </div>
 
-          {/* Text Content */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center lg:text-left max-w-lg"
-          >
-            <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-foreground">
-              FSR-95
+          {/* Manifesto */}
+          <div>
+            <h2 className="display-lg text-foreground mb-5">
+              FSR<span className="text-primary">-</span>95
             </h2>
-            <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
-Иҗат туа торган һәм нык дуслык бәйләнешләре корыла торган урын. Без гади генә Discord-сервер түгел — без музыка, уеннар һәм сәнгатькә булган уртак мәхәббәт белән берләшкән фикердәшләр гаиләсе.
+            <p className="text-foreground/80 text-lg md:text-xl leading-relaxed max-w-xl">
+              Иҗат туа торган һәм нык дуслык бәйләнешләре корыла торган урын. Без гади генә
+              Discord-сервер түгел — без музыка, уеннар һәм сәнгатькә булган уртак мәхәббәт
+              белән берләшкән фикердәшләр гаиләсе.
             </p>
 
-            <motion.div 
-              className="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              {[
-                { emoji: '🎵', label: 'Музыка' },
-                { emoji: '🎮', label: 'Игры' },
-                { emoji: '🎨', label: 'Искусство' },
-                { emoji: '💬', label: 'Общение' },
-              ].map((item, index) => (
-                <motion.div
-                  key={item.label}
-                  className="px-4 py-2 rounded-full bg-card border border-border text-sm text-foreground hover:border-foreground/30 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                >
-                  {item.emoji} {item.label}
-                </motion.div>
+            <ul className="mt-8 flex flex-wrap gap-2">
+              {tags.map((t) => (
+                <li key={t.label} className="chip">
+                  <span aria-hidden="true">{t.emoji}</span>
+                  {t.label}
+                </li>
               ))}
-            </motion.div>
-          </motion.div>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
