@@ -10,13 +10,13 @@ import brishaPoster from '@/assets/Brisha.webp';
 import doghAudio from '@/assets/Dogh.mp4';
 
 /**
- * Two frameless video cards that sit between the hero and the roster. They
- * were originally huge GIF buttons — replaced with looping inline video
- * (MP4 + WebM fallback) which shrinks Brisha.gif from 63 MB to ~500 KB.
+ * Two standalone video drops placed in opposite corners — no card, no
+ * container background. Brisha pins to the top-left, Andrew hangs from the
+ * bottom-right. Between them, a diagonal strip of mono text fills the
+ * negative space so the section doesn't feel empty.
  *
- * Left card plays an audio sting on click, right opens the YouTube channel.
- * No amber window chrome — just clean frames with corner ticks and a slim
- * footer bar for the label + action hint.
+ * Video is loop/muted/inline (MP4 + WebM). Tap Brisha to play the 'Dogh'
+ * sting; Andrew opens the YouTube channel.
  */
 const andrewLink = 'https://www.youtube.com/@ФСР95';
 
@@ -35,24 +35,40 @@ const InteractivePlaceholders = () => {
   };
 
   return (
-    <section className="relative py-14 md:py-20 border-b border-border">
+    <section className="relative py-16 md:py-24 border-b border-border">
       <div className="section-container">
-        <div className="flex items-baseline justify-between mb-6">
+        <div className="flex items-baseline justify-between mb-8">
           <span className="eyebrow">№ 01 / ВЫЗОВ В ЭФИР</span>
           <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
             [TAP_TO_PLAY]
           </span>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 md:gap-10">
-          {/* Left: Brisha — clickable card that plays the Dogh sting */}
+        {/* Diagonal stage: two drops in opposite corners with a caption ribbon
+            running between them. Fixed min-height on md+ so the absolute
+            positioning has room to breathe; on mobile it stacks linearly. */}
+        <div className="relative min-h-[360px] md:min-h-[520px]">
+          {/* Diagonal slash running corner to corner (desktop only) */}
+          <div
+            aria-hidden="true"
+            className="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none select-none"
+          >
+            <div
+              className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.4em] text-muted-foreground/40"
+              style={{ transform: 'rotate(-18deg)' }}
+            >
+              ▸ SIGNAL_ACQUIRED ·· CHANNEL 95 ·· DOGH.WAV ·· SUBSCRIBE.NOW ·· SIGNAL_ACQUIRED
+            </div>
+          </div>
+
+          {/* Left: Brisha — top-left drop */}
           <button
             type="button"
             onClick={playDogh}
-            className="group relative text-left"
             aria-label="Брыша — проиграть звук"
+            className="group block md:absolute md:top-0 md:left-0 w-full md:w-[44%] mb-8 md:mb-0 text-left"
           >
-            <div className="relative overflow-hidden bg-background">
+            <div className="relative overflow-hidden">
               <video
                 muted
                 loop
@@ -67,7 +83,6 @@ const InteractivePlaceholders = () => {
                 <source src={brishaWebm} type="video/webm" />
                 <source src={brishaMp4} type="video/mp4" />
               </video>
-              {/* Viewfinder corner ticks */}
               <span className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-primary" />
               <span className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-primary" />
               <span className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-primary" />
@@ -76,7 +91,7 @@ const InteractivePlaceholders = () => {
             <div className="mt-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Volume2 className="w-3 h-3 text-primary" />
-                BRISHA.VID <span className="text-muted-foreground/60">// audio-trigger</span>
+                BRISHA.VID <span className="text-muted-foreground/60 hidden sm:inline">// audio-trigger</span>
               </span>
               <span className="text-primary group-hover:text-foreground transition-colors">
                 [ TAP ▸ ]
@@ -84,14 +99,14 @@ const InteractivePlaceholders = () => {
             </div>
           </button>
 
-          {/* Right: Andrew — link to YouTube */}
+          {/* Right: Andrew — bottom-right drop */}
           <a
             href={andrewLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative"
+            className="group block md:absolute md:bottom-0 md:right-0 w-full md:w-[44%]"
           >
-            <div className="relative overflow-hidden bg-background">
+            <div className="relative overflow-hidden">
               <video
                 muted
                 loop
@@ -114,7 +129,7 @@ const InteractivePlaceholders = () => {
             <div className="mt-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               <span className="flex items-center gap-2">
                 <ArrowUpRight className="w-3 h-3 text-primary" />
-                ANDREW.VID <span className="text-muted-foreground/60">// youtube.com/@фср95</span>
+                ANDREW.VID <span className="text-muted-foreground/60 hidden sm:inline">// youtube.com/@фср95</span>
               </span>
               <span className="text-primary group-hover:text-foreground transition-colors">
                 [ OPEN ▸ ]
