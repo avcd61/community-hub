@@ -1,12 +1,11 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 import member1 from '@/assets/member-1.webp';
 import member2 from '@/assets/member-2.webp';
 import member3 from '@/assets/member-3.webp';
 import member4 from '@/assets/member-4.webp';
 
-interface Member {
+interface Channel {
   id: number;
   name: string;
   role: string;
@@ -16,7 +15,7 @@ interface Member {
   buttonText: string;
 }
 
-const members: Member[] = [
+const channels: Channel[] = [
   {
     id: 1,
     name: 'Дискорд сервер',
@@ -24,7 +23,7 @@ const members: Member[] = [
     quote: 'В этом месте сидят 95 братухи и делают завозы каждый день',
     avatar: member1,
     buttonUrl: 'https://discord.com/invite/PNnSKWNhYE',
-    buttonText: 'Присоединиться к серверу',
+    buttonText: 'Присоединиться',
   },
   {
     id: 2,
@@ -56,28 +55,21 @@ const members: Member[] = [
 ];
 
 /**
- * Hero: a VHS/magazine-cover carousel. Full-bleed portrait with the channel
- * name typed across the bottom as one giant brutalist label; a thin meta
- * strip on top spells out CH.XX / ROLE / EST. On desktop, a narrow sidebar
- * holds the station identity and ticker — no amber window chrome, just clean
- * frames with corner ticks.
+ * Hero — a full broadcast "channel guide". Instead of a carousel that
+ * hides 3 of 4 destinations behind a click, all four are shown as rows
+ * in a TV-guide table. Each row is a link; the whole row highlights
+ * amber on hover/focus. Keeps the avatars at a natural 1:1 size so they
+ * don't get chopped by a 21:9 crop.
  *
- * All animations are CSS-only; the replay on index change is forced with
- * `key={current.id}` so we never pull in framer-motion here.
+ * No framer-motion, no carousel state; CSS-only interactions.
  */
 const HeroCarousel = () => {
-  const [index, setIndex] = useState(0);
-  const current = members[index];
-  const next = () => setIndex((i) => (i + 1) % members.length);
-  const prev = () => setIndex((i) => (i === 0 ? members.length - 1 : i - 1));
-
   return (
     <section
       id="hero"
       className="relative pt-14 md:pt-16 border-b border-border overflow-hidden"
     >
-      {/* Ticker strip pinned right under the header. Duplicated content so the
-          CSS translateX can loop seamlessly. */}
+      {/* Ticker — thin marquee bar under the header */}
       <div className="relative h-7 border-b border-border bg-card/70 overflow-hidden">
         <div className="flex whitespace-nowrap animate-ticker will-change-transform">
           {Array.from({ length: 2 }).map((_, dup) => (
@@ -98,163 +90,127 @@ const HeroCarousel = () => {
         </div>
       </div>
 
-      <div className="section-container pt-10 md:pt-14 pb-8 md:pb-10">
-        {/* Meta strip above the cover */}
-        <div className="flex items-center justify-between mb-5 md:mb-6">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="chip chip-signal">
-              <span className="on-air-dot" /> TRANSMISSION
-            </span>
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-              EST. 2024
-            </span>
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground hidden md:inline">
-              // MHZ 1995.00
-            </span>
-          </div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-            CH.<span className="text-primary">{String(index + 1).padStart(2, '0')}</span>
-            <span className="text-muted-foreground/60">/{String(members.length).padStart(2, '0')}</span>
-          </div>
+      <div className="section-container pt-10 md:pt-14 pb-10 md:pb-14">
+        {/* Station identity */}
+        <div className="flex items-center gap-3 flex-wrap mb-5">
+          <span className="chip chip-signal">
+            <span className="on-air-dot" /> TRANSMISSION
+          </span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+            EST. 2024 // MHZ 1995.00
+          </span>
         </div>
 
-        {/* Station ID headline */}
-        <h1 className="display-xl text-foreground mb-8 md:mb-10">
-          ЗАВО<span className="text-primary">ЗЯМБА</span>
-          <span className="text-foreground/40"> · </span>
-          <span className="text-foreground">№95</span>
+        <h1
+          className="font-display font-black uppercase leading-[0.88] tracking-[-0.02em] text-foreground"
+          style={{ fontSize: 'clamp(2.5rem, 8vw, 6.5rem)' }}
+        >
+          ЗАВО<span className="text-primary">ЗЯМБА</span>{' '}
+          <span className="text-foreground/40">№</span>
+          <span className="text-foreground">95</span>
         </h1>
 
-        {/* Cover card: full-bleed portrait, typography over the bottom */}
-        <article
-          key={current.id}
-          className="relative overflow-hidden border border-border bg-card animate-fade-up"
-        >
-          <div className="relative aspect-[16/10] md:aspect-[21/9] bg-background">
-            <img
-              src={current.avatar}
-              alt={current.name}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="eager"
-              decoding="async"
-              width={1600}
-              height={900}
-            />
+        <p className="mt-5 max-w-2xl text-foreground/75 text-base md:text-lg leading-relaxed">
+          Ретрансляция криворожского андеграунда. Музыка, Minecraft, мемы и 95
+          братух в прямом эфире. Ниже — все каналы,{' '}
+          <span className="text-primary">выбирай любой</span>.
+        </p>
 
-            {/* Subtle vignette for legibility of the bottom text */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  'linear-gradient(180deg, rgba(11,9,6,0.15) 0%, rgba(11,9,6,0) 30%, rgba(11,9,6,0) 45%, rgba(11,9,6,0.88) 100%)',
-              }}
-            />
+        {/* Channel guide — TV-guide table of all 4 destinations */}
+        <div className="mt-10 md:mt-14">
+          <div className="flex items-baseline justify-between mb-4">
+            <span className="eyebrow">// CHANNEL GUIDE</span>
+            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              [{String(channels.length).padStart(2, '0')}_CHANNELS_ON_AIR]
+            </span>
+          </div>
 
-            {/* Corner ticks */}
-            <span className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-primary" />
-            <span className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-primary" />
-            <span className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-primary" />
-            <span className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-primary" />
-
-            {/* Top-left channel badge */}
-            <div className="absolute top-5 left-5 md:top-6 md:left-6">
-              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-primary bg-background/75 backdrop-blur-sm px-2.5 py-1 border border-primary/70">
-                CH.{String(index + 1).padStart(2, '0')} · {current.role}
-              </div>
-            </div>
-
-            {/* Top-right REC indicator */}
-            <div className="absolute top-5 right-5 md:top-6 md:right-6">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-signal bg-background/75 backdrop-blur-sm px-2 py-1 border border-border">
-                <span className="on-air-dot" /> REC
-              </div>
-            </div>
-
-            {/* Bottom text stack */}
-            <div className="absolute inset-x-0 bottom-0 p-5 md:p-8">
-              <h2
-                className="font-display font-black uppercase leading-[0.85] text-foreground tracking-[-0.02em]"
-                style={{ fontSize: 'clamp(2rem, 6vw, 5rem)' }}
-              >
-                {current.name}
-              </h2>
-              <p className="mt-3 md:mt-4 max-w-2xl text-foreground/85 text-sm md:text-base leading-snug italic">
-                «{current.quote}»
-              </p>
-
-              <div className="mt-5 md:mt-6 flex items-center gap-4 flex-wrap">
+          <ul className="border border-border bg-border grid gap-px">
+            {channels.map((ch, i) => (
+              <li key={ch.id} className="bg-card">
                 <a
-                  href={current.buttonUrl}
+                  href={ch.buttonUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-3 bg-primary text-primary-foreground px-5 py-3 font-mono text-xs md:text-sm uppercase tracking-[0.2em] hover:bg-foreground hover:text-background transition-colors"
+                  className="group relative grid grid-cols-[auto_auto_1fr_auto] md:grid-cols-[auto_auto_1fr_auto_auto] items-center gap-4 md:gap-6 p-4 md:p-5 hover:bg-primary/5 transition-colors"
+                  style={{
+                    animation: 'fade-up 0.55s cubic-bezier(0.16,1,0.3,1) both',
+                    animationDelay: `${80 + i * 70}ms`,
+                  }}
                 >
-                  <span>{current.buttonText}</span>
-                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </a>
+                  {/* Channel code */}
+                  <div className="font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary w-12 md:w-16 shrink-0">
+                    CH.{String(i + 1).padStart(2, '0')}
+                  </div>
 
-                <button
-                  onClick={next}
-                  className="group inline-flex items-center gap-2 px-3 py-3 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-                  aria-label="Next channel"
-                >
-                  SKIP <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+                  {/* Avatar in a viewfinder frame */}
+                  <div className="relative w-14 h-14 md:w-20 md:h-20 shrink-0 border border-border bg-background overflow-hidden">
+                    <img
+                      src={ch.avatar}
+                      alt={ch.name}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      width={160}
+                      height={160}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-0.5 left-0.5 w-2 h-2 border-t-2 border-l-2 border-primary" />
+                    <span className="absolute top-0.5 right-0.5 w-2 h-2 border-t-2 border-r-2 border-primary" />
+                    <span className="absolute bottom-0.5 left-0.5 w-2 h-2 border-b-2 border-l-2 border-primary" />
+                    <span className="absolute bottom-0.5 right-0.5 w-2 h-2 border-b-2 border-r-2 border-primary" />
+                  </div>
+
+                  {/* Name / role / quote */}
+                  <div className="min-w-0">
+                    <div className="flex items-baseline gap-3 flex-wrap">
+                      <h2 className="font-display font-black uppercase leading-none text-foreground tracking-[-0.01em] text-lg md:text-2xl group-hover:text-primary transition-colors">
+                        {ch.name}
+                      </h2>
+                      <span className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                        // {ch.role}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-foreground/70 text-xs md:text-sm leading-snug line-clamp-2 md:line-clamp-1">
+                      «{ch.quote}»
+                    </p>
+                  </div>
+
+                  {/* CTA text (hidden on narrow, visible md+) */}
+                  <span className="hidden md:inline-block font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-primary transition-colors">
+                    {ch.buttonText}
+                  </span>
+
+                  {/* Arrow chip */}
+                  <span
+                    className="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 border border-border text-foreground group-hover:border-primary group-hover:text-primary-foreground group-hover:bg-primary transition-colors"
+                    aria-hidden="true"
+                  >
+                    <ArrowUpRight className="w-4 h-4" />
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          {/* Footnote: EQ bars + frequency dial */}
+          <div className="mt-6 flex items-center justify-between gap-4">
+            <div className="flex items-end gap-1 h-6" aria-hidden="true">
+              {Array.from({ length: 14 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="eq-bar"
+                  style={{
+                    animationDelay: `${(i % 7) * 80}ms`,
+                    height: `${10 + (i % 5) * 4}px`,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              CH.95 <span className="text-primary">//</span> 1995.00 MHz{' '}
+              <span className="text-primary caret" />
             </div>
           </div>
-        </article>
-
-        {/* Channel dial */}
-        <div className="mt-6 md:mt-8 grid grid-cols-[auto_1fr_auto] items-center gap-4">
-          <button
-            onClick={prev}
-            className="group flex items-center gap-2 px-3 py-2 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-            aria-label="Previous channel"
-          >
-            <ChevronLeft className="w-4 h-4" /> PREV
-          </button>
-
-          <div className="flex items-stretch justify-center gap-2 md:gap-3 overflow-x-auto">
-            {members.map((m, i) => (
-              <button
-                key={m.id}
-                onClick={() => setIndex(i)}
-                aria-label={`Channel ${i + 1}: ${m.name}`}
-                aria-current={i === index}
-                className={`group shrink-0 flex flex-col items-start gap-1.5 px-3 py-2 border font-mono text-[10px] uppercase tracking-[0.2em] transition-colors ${
-                  i === index
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/40'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    className={`inline-block h-2 w-2 ${
-                      i === index ? 'bg-primary' : 'bg-border'
-                    }`}
-                    aria-hidden="true"
-                  />
-                  CH.{String(i + 1).padStart(2, '0')}
-                </span>
-                <span
-                  className={`max-w-[14ch] truncate text-[10px] ${
-                    i === index ? 'text-foreground' : 'text-muted-foreground/80'
-                  }`}
-                >
-                  {m.name}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={next}
-            className="group flex items-center gap-2 px-3 py-2 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-            aria-label="Next channel"
-          >
-            NEXT <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </section>
