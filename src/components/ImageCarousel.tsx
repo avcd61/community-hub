@@ -106,6 +106,16 @@ const ImageCarousel = () => {
   const ref = useReveal<HTMLDivElement>();
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(0);
+  /*
+    Per-episode fallback state. YouTube does not render a
+    `maxresdefault.jpg` for every video (e.g. episode 5, 8RqMc50rabo,
+    returns 404) — so we try `maxresdefault` first and, on error, flip
+    this map so the card re-renders with `hqdefault` (which every
+    video has). An on-DOM fallback via `img.onerror` is not enough
+    because the carousel re-renders on scroll and React would keep
+    resetting `img.src` back to `maxresdefault` each time.
+  */
+  const [thumbFallback, setThumbFallback] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const track = trackRef.current;
@@ -265,16 +275,18 @@ const ImageCarousel = () => {
                     </div>
                   ) : (
                     <img
-                      src={ytThumb(ep.ytId)}
+                      src={
+                        thumbFallback[ep.ytId]
+                          ? ytThumbFallback(ep.ytId)
+                          : ytThumb(ep.ytId)
+                      }
                       alt={ep.title}
                       loading={i === 0 ? 'eager' : 'lazy'}
                       decoding="async"
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        if (!img.dataset.fallback && ep.ytId) {
-                          img.dataset.fallback = '1';
-                          img.src = ytThumbFallback(ep.ytId);
+                      onError={() => {
+                        if (ep.ytId && !thumbFallback[ep.ytId]) {
+                          setThumbFallback((m) => ({ ...m, [ep.ytId!]: true }));
                         }
                       }}
                     />
