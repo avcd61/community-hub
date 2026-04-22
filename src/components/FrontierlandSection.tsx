@@ -87,21 +87,43 @@ const FrontierlandSection = () => {
           <span className="ml-auto opacity-70 hidden sm:inline">[MC_SERVER]</span>
         </div>
 
-        <div ref={ref} className="reveal grid lg:grid-cols-12 gap-10">
-          {/* Left — copy */}
-          <div className="lg:col-span-5">
+        <div ref={ref} className="reveal">
+          {/* Full-width headline — always above the gallery. */}
+          <div className="mb-10 md:mb-14">
             <div className="violet-badge mb-5">
               <span aria-hidden="true">◆</span>
               Minecraft · ФСР-95
             </div>
-            <h2 className="display-xl mb-6 text-balance">
-              FRONTIER<span style={{ color: 'hsl(var(--violet-400))' }}>·</span>LAND
+            <h2
+              className="display-xl text-balance"
+              style={{ fontSize: 'clamp(3rem, 12vw, 11rem)' }}
+            >
+              <span>FRONTIER</span>
+              <span
+                className="relative inline-block"
+                style={{
+                  color: 'hsl(var(--violet-400))',
+                  textShadow:
+                    '0 0 32px hsl(var(--violet-400) / 0.55), 0 0 80px hsl(var(--violet-500) / 0.35)',
+                }}
+              >
+                LAND
+              </span>
             </h2>
-            <p className="text-lg md:text-xl leading-relaxed max-w-xl" style={{ color: 'hsl(var(--violet-50) / 0.85)' }}>
+            <p
+              className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl"
+              style={{ color: 'hsl(var(--violet-50) / 0.85)' }}
+            >
               Частный MC-сервер ФСР-95. Твой шанс увидеть, как 95 братух строят
               целую цивилизацию на одном поле — от скромной землянки до города
               с рейдами и ареной.
             </p>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-10">
+          {/* Left — copy (without the headline now). */}
+          <div className="lg:col-span-5 order-2 lg:order-1">
 
             {/* IP + copy */}
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-stretch">
@@ -169,7 +191,7 @@ const FrontierlandSection = () => {
           </div>
 
           {/* Right — screenshot stack */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 order-1 lg:order-2">
             <div className="relative aspect-[16/10] overflow-hidden" style={{ border: '1px solid hsl(var(--violet-500) / 0.5)' }}>
               {screenshots.map((src, i) => (
                 <img

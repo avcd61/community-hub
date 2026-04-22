@@ -150,7 +150,7 @@ const HeroCarousel = () => {
         </div>
 
         <div
-          className="pointer-events-none absolute bottom-[-4%] right-[-4%] w-[36%] max-w-[460px] min-w-[200px] opacity-95 z-[5]"
+          className="pointer-events-none absolute bottom-[10%] md:bottom-[14%] right-[-2%] md:right-[-3%] w-[32%] md:w-[34%] max-w-[440px] min-w-[200px] opacity-95 z-[5]"
           style={{
             transform: `translate3d(${parallax.x * 18}px, ${parallax.y * 14}px, 0)`,
             transition: 'transform 0.35s cubic-bezier(0.2,0.9,0.2,1)',
