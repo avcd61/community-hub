@@ -4,27 +4,68 @@ import { Menu, X } from 'lucide-react';
 import logo from '@/assets/logo.webp';
 
 const navLinks = [
-  { label: 'Главная', href: '#hero', code: 'CH.01' },
-  { label: 'О нас', href: '#about', code: 'CH.02' },
-  { label: 'Альбомы', href: '#music', code: 'CH.03' },
-  { label: 'Frontierland', href: '#frontierland', code: 'CH.04' },
+  { label: 'Главная', href: '#hero', index: 'I' },
+  { label: 'Ростер', href: '#about', index: 'II' },
+  { label: 'Альбомы', href: '#music', index: 'III' },
+  { label: 'Frontierland', href: '#frontierland', index: 'IV' },
+  { label: 'Федот', href: '#reel', index: 'V' },
 ];
 
 /**
- * Broadcast control bar. Pinned to the top, swaps to an opaque + bordered
- * state once the user scrolls past the hero. All animations are CSS — no
- * framer-motion is imported here anymore, which saves ~60 KB gzipped on the
- * initial bundle.
+ * Top navigation. A thin 44px rail at the very top is always visible —
+ * contains the wordmark and a live clock/status. The main nav lives
+ * beneath it and hides on scroll down / re-appears on scroll up.
  */
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
+  const [activeHash, setActiveHash] = useState<string>('#hero');
+  const [clock, setClock] = useState<string>('');
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      const goingDown = y > lastY && y > 120;
+      setHidden(goingDown);
+      lastY = y;
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const ids = navLinks.map((l) => l.href.slice(1));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActiveHash(`#${visible.target.id}`);
+      },
+      { threshold: [0.2, 0.5, 0.8] }
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const mm = String(d.getUTCMinutes()).padStart(2, '0');
+      const ss = String(d.getUTCSeconds()).padStart(2, '0');
+      setClock(`${hh}:${mm}:${ss} UTC`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
   const go = (href: string) => {
@@ -34,10 +75,29 @@ const Header = () => {
 
   return (
     <>
+      {/* Thin status rail — always visible at the very top. */}
+      <div className="fixed top-0 inset-x-0 z-50 h-7 flex items-center border-b border-border bg-background/85 backdrop-blur-sm">
+        <div className="section-container flex items-center justify-between font-mono text-[10px] md:text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <span className="pulse-dot" />
+            <span className="text-foreground">FSR-95</span>
+            <span className="hidden sm:inline">/ EDITION II</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline">CH.95</span>
+            <span className="hidden md:inline">· MHZ 1995.00</span>
+            <span className="text-foreground/80">{clock}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main nav below it. */}
       <header
-        className={`fixed top-0 inset-x-0 z-50 transition-colors duration-200 ${
+        className={`fixed top-7 inset-x-0 z-50 transition-all duration-300 ${
+          hidden ? '-translate-y-full' : 'translate-y-0'
+        } ${
           scrolled
-            ? 'bg-background/92 backdrop-blur-sm border-b border-border'
+            ? 'bg-background/90 backdrop-blur-sm border-b border-border'
             : 'bg-transparent border-b border-transparent'
         }`}
       >
@@ -48,48 +108,50 @@ const Header = () => {
               e.preventDefault();
               go('#hero');
             }}
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-3"
+            aria-label="FSR-95, на главную"
           >
             <img
               src={logo}
-              alt="FSR-95"
-              width={28}
-              height={28}
-              className="w-7 h-7 object-contain"
+              alt=""
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain"
               loading="eager"
               decoding="async"
             />
-            <span className="font-mono text-[11px] md:text-xs tracking-[0.25em] uppercase">
-              <span className="text-foreground">[FSR-95]</span>{' '}
-              <span className="text-primary">CH.95</span>{' '}
-              <span className="hidden md:inline text-muted-foreground">// BROADCAST</span>
+            <span className="font-display uppercase text-[15px] md:text-base tracking-[-0.02em] leading-none">
+              FSR<span className="bg-foreground text-background px-[0.22em] mx-[0.1em]">-</span>95
             </span>
           </a>
 
-          <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  go(link.href);
-                }}
-                className="group font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <span className="text-primary group-hover:text-foreground">{link.code}</span>{' '}
-                {link.label}
-              </a>
-            ))}
-            <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-signal pl-4 border-l border-border">
-              <span className="on-air-dot" /> ON AIR
-            </span>
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => {
+              const active = activeHash === link.href;
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    go(link.href);
+                  }}
+                  className={`u-link font-mono text-[11px] uppercase tracking-[0.25em] ${
+                    active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-active={active || undefined}
+                >
+                  <span className="opacity-50 mr-2">{link.index}</span>
+                  {link.label}
+                </a>
+              );
+            })}
           </nav>
 
           <button
             onClick={() => setOpen((v) => !v)}
             className="md:hidden p-2 text-foreground"
-            aria-label="Menu"
+            aria-label="Меню"
             aria-expanded={open}
           >
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -97,10 +159,11 @@ const Header = () => {
         </div>
       </header>
 
+      {/* Mobile panel */}
       {open && (
-        <div className="fixed top-14 inset-x-0 z-40 md:hidden bg-background border-b border-border animate-fade-in">
+        <div className="fixed top-[5.25rem] inset-x-0 z-40 md:hidden bg-background border-y border-border animate-fade-in">
           <nav className="section-container py-6 flex flex-col gap-3">
-            {navLinks.map((link) => (
+            {navLinks.map((link, i) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -108,15 +171,20 @@ const Header = () => {
                   e.preventDefault();
                   go(link.href);
                 }}
-                className="flex items-baseline gap-3 font-mono text-sm uppercase tracking-[0.2em] text-foreground py-1"
+                className="flex items-baseline justify-between gap-3 border-b border-border py-3"
+                style={{
+                  animation: 'fade-up 0.5s cubic-bezier(0.2,0.9,0.2,1) both',
+                  animationDelay: `${i * 60}ms`,
+                }}
               >
-                <span className="text-primary text-[11px]">{link.code}</span>
-                <span>{link.label}</span>
+                <span className="font-display uppercase text-xl leading-none">
+                  {link.label}
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  {link.index}
+                </span>
               </a>
             ))}
-            <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-signal pt-3 border-t border-border">
-              <span className="on-air-dot" /> ON AIR
-            </span>
           </nav>
         </div>
       )}

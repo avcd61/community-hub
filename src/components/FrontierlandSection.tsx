@@ -1,170 +1,257 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Copy, Check, ArrowUpRight } from 'lucide-react';
 
 import { useReveal } from '@/hooks/use-reveal';
 
-import minecraft1 from '@/assets/FL1.webp';
-import minecraft2 from '@/assets/FL2.webp';
-import minecraft3 from '@/assets/FL3.webp';
+import fl1 from '@/assets/FL1.webp';
+import fl2 from '@/assets/FL2.webp';
+import fl3 from '@/assets/FL3.webp';
 
-const screenshots = [
-  { src: minecraft1, label: 'MAP_ALPHA' },
-  { src: minecraft2, label: 'MGE_DUEL' },
-  { src: minecraft3, label: 'SPIDRAN' },
+const screenshots = [fl1, fl2, fl3];
+
+const pillars = [
+  { title: 'ВЫЖИВАНИЕ', text: 'Честный майн без читов: крафт, строительство, фермы.' },
+  { title: 'PVP АРЕНА', text: 'Ежедневные битвы за статус лучшего бойца 95-го.' },
+  { title: 'СОБЫТИЯ', text: 'Конкурсы, рейды, командные события каждую неделю.' },
+  { title: 'ГИЛЬДИИ', text: 'Собирай команду, стройся, качай прокачку, доминируй.' },
 ];
 
-const features = [
-  {
-    icon: '🏰',
-    title: 'Эпические спидраны',
-    desc: 'В 1 секунду существования сервера кальций уже будет ходить в незерке',
-  },
-  {
-    icon: '⚔️',
-    title: 'MGE срачи',
-    desc: 'Пиздиловка из за маленького писюна... ОУ ДА!!!',
-  },
-  {
-    icon: '🤝',
-    title: 'Админ завозит',
-    desc: 'Админ бывает даёт ёбу и начинается ужас',
-  },
-];
+const SERVER_IP = 'play.fsr-95.ru';
 
 /**
- * Frontierland broadcast feed. Screenshots are framed like a TV monitor with
- * station ident overlays (timestamp / channel / REC). We lazy-load the two
- * offscreen images and only decode the active one synchronously.
+ * Frontierland. Only section with colour — black base + electric violet
+ * accents. Uses its own button style and halftone purple background.
  */
 const FrontierlandSection = () => {
-  const [slide, setSlide] = useState(0);
   const ref = useReveal<HTMLDivElement>();
+  const [active, setActive] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | null>(null);
 
-  const next = () => setSlide((s) => (s + 1) % screenshots.length);
-  const prev = () => setSlide((s) => (s === 0 ? screenshots.length - 1 : s - 1));
+  useEffect(() => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    timerRef.current = window.setInterval(() => {
+      setActive((i) => (i + 1) % screenshots.length);
+    }, 5500);
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const copyIP = async () => {
+    try {
+      await navigator.clipboard.writeText(SERVER_IP);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
-    <section id="frontierland" className="relative py-20 md:py-28 border-b border-border">
-      <div className="section-container">
-        <div className="flex items-baseline justify-between mb-6">
-          <span className="eyebrow">№ 04 / FEED</span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            [FRONTIERLAND_MC]
-          </span>
+    <section
+      id="frontierland"
+      className="violet-section relative section-shell py-24 md:py-32 border-t"
+    >
+      {/* Violet rail / kinetic ticker exclusive to this section */}
+      <div className="absolute top-0 inset-x-0 h-8 overflow-hidden border-b" style={{ borderColor: 'hsl(var(--violet-700) / 0.55)' }}>
+        <div
+          className="marquee-track flex items-center gap-10 h-full pr-10 font-mono text-[11px] uppercase tracking-[0.3em]"
+          style={{ animationDuration: '36s', color: 'hsl(var(--violet-300))' }}
+        >
+          {Array.from({ length: 2 }).map((_, dup) => (
+            <div key={dup} className="flex shrink-0 items-center gap-10">
+              <span>FRONTIERLAND · MINECRAFT 1.20.1</span>
+              <span>·</span>
+              <span>CH.IV / PURPLE SIGNAL</span>
+              <span>·</span>
+              <span>IP {SERVER_IP}</span>
+              <span>·</span>
+              <span>24/7 · NO GRIEF · NO CHEATS</span>
+              <span>·</span>
+              <span>{'<'} JOIN THE FRONTIER {'>'}</span>
+              <span>·</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-container pt-6">
+        <div
+          className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.28em] mb-8"
+          style={{ color: 'hsl(var(--violet-300))' }}
+        >
+          <span>№ V</span>
+          <span className="opacity-50">/</span>
+          <span>FRONTIERLAND</span>
+          <span className="ml-auto opacity-70 hidden sm:inline">[MC_SERVER]</span>
         </div>
 
-        <div ref={ref} className="reveal">
-          <h2 className="display-xl text-foreground mb-4">
-            FRONTIER<span className="text-primary">LAND</span>
-          </h2>
-          <p className="max-w-2xl text-foreground/80 text-base md:text-lg mb-10">
-            Наш уникальный майнкрафт сервер, где каждый может навалить контенту и забить на него
-            через неделю.
-            <span className="text-primary"> (Андрей — Лучший Админ)</span>
-          </p>
-
-          {/* Monitor */}
-          <div className="relative max-w-5xl mx-auto">
-            <div className="window">
-              <div className="window-title">
-                <span>▓</span>
-                <span>FEED_{slide + 1}_OF_{screenshots.length}.CAM</span>
-                <span className="ml-auto flex items-center gap-2 text-primary-foreground/90">
-                  <span className="on-air-dot" />
-                  <span>{screenshots[slide].label}</span>
-                  <span className="hidden md:inline">/ 00:{String(10 + slide * 7).padStart(2, '0')}:{String(slide * 12 + 2).padStart(2, '0')}</span>
-                </span>
-              </div>
-              <div className="window-body pt-7">
-                <div className="relative aspect-video bg-background overflow-hidden">
-                  {screenshots.map((s, i) => (
-                    <img
-                      key={i}
-                      src={s.src}
-                      alt={`Frontierland ${i + 1}`}
-                      loading={i === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      width={1280}
-                      height={720}
-                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-                        i === slide ? 'opacity-100' : 'opacity-0'
-                      }`}
-                    />
-                  ))}
-                  {/* Overlay chrome */}
-                  <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute top-3 left-3 font-mono text-[11px] uppercase tracking-[0.2em] text-primary drop-shadow">
-                      REC ● CH.04
-                    </div>
-                    <div className="absolute bottom-3 right-3 font-mono text-[11px] uppercase tracking-[0.2em] text-primary drop-shadow">
-                      {String(slide + 1).padStart(2, '0')}/{String(screenshots.length).padStart(2, '0')}
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-16 md:right-auto md:max-w-md bg-background/80 border border-border p-3 md:p-4">
-                      <p className="text-sm md:text-base text-foreground leading-relaxed">
-                        Погрузитесь в мир конченных сборок. Стройте писюны, исспытывайте терпение
-                        админа, завозите контент в уникальной атмосфере нашего сервера.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div ref={ref} className="reveal grid lg:grid-cols-12 gap-10">
+          {/* Left — copy */}
+          <div className="lg:col-span-5">
+            <div className="violet-badge mb-5">
+              <span aria-hidden="true">◆</span>
+              Minecraft · ФСР-95
             </div>
+            <h2 className="display-xl mb-6 text-balance">
+              FRONTIER<span style={{ color: 'hsl(var(--violet-400))' }}>·</span>LAND
+            </h2>
+            <p className="text-lg md:text-xl leading-relaxed max-w-xl" style={{ color: 'hsl(var(--violet-50) / 0.85)' }}>
+              Частный MC-сервер ФСР-95. Твой шанс увидеть, как 95 братух строят
+              целую цивилизацию на одном поле — от скромной землянки до города
+              с рейдами и ареной.
+            </p>
 
-            {/* Monitor controls */}
-            <div className="flex items-center justify-between mt-5">
-              <button
-                onClick={prev}
-                className="flex items-center gap-2 px-3 py-2 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-                aria-label="Previous screenshot"
-              >
-                <ChevronLeft className="w-4 h-4" /> PREV
-              </button>
-              <div className="flex items-center gap-2">
-                {screenshots.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSlide(i)}
-                    aria-label={`Screenshot ${i + 1}`}
-                    className={`h-1 transition-all duration-300 ${
-                      i === slide ? 'w-10 bg-primary' : 'w-6 bg-border'
-                    }`}
-                  />
-                ))}
-              </div>
-              <button
-                onClick={next}
-                className="flex items-center gap-2 px-3 py-2 border border-border hover:border-primary hover:text-primary font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-                aria-label="Next screenshot"
-              >
-                NEXT <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Feature cards */}
-          <ul className="grid md:grid-cols-3 gap-5 md:gap-6 mt-14 max-w-5xl mx-auto">
-            {features.map((f, i) => (
-              <li
-                key={f.title}
-                className="border border-border bg-card p-6"
+            {/* IP + copy */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-stretch">
+              <div
+                className="relative flex items-center gap-3 px-4 h-12 font-mono text-[12px] uppercase tracking-[0.25em] truncate"
                 style={{
-                  animation: 'fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both',
-                  animationDelay: `${200 + i * 80}ms`,
+                  background: 'hsl(var(--violet-900) / 0.55)',
+                  border: '1px solid hsl(var(--violet-500) / 0.6)',
+                  color: 'hsl(var(--violet-50))',
                 }}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-primary">
-                    № {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="text-3xl" aria-hidden="true">{f.icon}</span>
-                </div>
-                <h3 className="font-display font-black uppercase text-lg md:text-xl text-foreground mb-2">
-                  {f.title}
-                </h3>
-                <p className="text-foreground/70 text-sm leading-relaxed">{f.desc}</p>
-              </li>
-            ))}
-          </ul>
+                <span className="opacity-60 hidden sm:inline">IP &gt;</span>
+                <span className="truncate">{SERVER_IP}</span>
+              </div>
+              <button
+                type="button"
+                onClick={copyIP}
+                className="btn-violet h-12"
+                aria-label="Копировать IP"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? 'Скопировано' : 'Скопировать IP'}</span>
+              </button>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a
+                href="https://discord.com/invite/PNnSKWNhYE"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-violet"
+              >
+                <span>Дискорд сервера</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* Pillars grid */}
+            <ul className="mt-10 grid grid-cols-2 gap-px" style={{ background: 'hsl(var(--violet-500) / 0.45)', border: '1px solid hsl(var(--violet-500) / 0.45)' }}>
+              {pillars.map((p, i) => (
+                <li
+                  key={p.title}
+                  className="p-4 md:p-5"
+                  style={{
+                    background: 'hsl(0 0% 4%)',
+                    animation: 'fade-up 0.8s cubic-bezier(0.2,0.9,0.2,1) both',
+                    animationDelay: `${i * 120}ms`,
+                  }}
+                >
+                  <div
+                    className="font-mono text-[10px] uppercase tracking-[0.3em] mb-2"
+                    style={{ color: 'hsl(var(--violet-300))' }}
+                  >
+                    #0{i + 1}
+                  </div>
+                  <div className="font-display uppercase text-lg md:text-xl leading-none tracking-[-0.02em]">
+                    {p.title}
+                  </div>
+                  <div className="mt-2 text-sm" style={{ color: 'hsl(var(--violet-50) / 0.75)' }}>
+                    {p.text}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Right — screenshot stack */}
+          <div className="lg:col-span-7">
+            <div className="relative aspect-[16/10] overflow-hidden" style={{ border: '1px solid hsl(var(--violet-500) / 0.5)' }}>
+              {screenshots.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={`Frontierland ${i + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                  style={{ opacity: active === i ? 1 : 0 }}
+                />
+              ))}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(180deg, hsl(265 60% 14% / 0) 0%, hsl(265 60% 14% / 0.6) 100%)',
+                }}
+              />
+              {/* HUD-ish labels */}
+              <div className="absolute top-4 left-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-300))' }}>
+                <span className="pulse-dot" style={{ background: 'hsl(var(--violet-400))', boxShadow: '0 0 12px hsl(var(--violet-400) / 0.6)' }} />
+                <span>Live feed · {String(active + 1).padStart(2, '0')}/{String(screenshots.length).padStart(2, '0')}</span>
+              </div>
+              <div className="absolute bottom-4 right-4 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-50) / 0.8)' }}>
+                FRONTIERLAND · MC_1.20.1
+              </div>
+
+              {/* Controls */}
+              <button
+                type="button"
+                onClick={() => setActive((i) => (i - 1 + screenshots.length) % screenshots.length)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center"
+                style={{
+                  background: 'hsl(0 0% 4% / 0.55)',
+                  border: '1px solid hsl(var(--violet-500) / 0.55)',
+                  color: 'hsl(var(--violet-50))',
+                }}
+                aria-label="Предыдущий скриншот"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActive((i) => (i + 1) % screenshots.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center"
+                style={{
+                  background: 'hsl(0 0% 4% / 0.55)',
+                  border: '1px solid hsl(var(--violet-500) / 0.55)',
+                  color: 'hsl(var(--violet-50))',
+                }}
+                aria-label="Следующий скриншот"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Pager strip */}
+            <div className="mt-4 flex items-center gap-2">
+              {screenshots.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  aria-label={`Показать ${i + 1}`}
+                  className="relative flex-1 h-[3px]"
+                  style={{
+                    background: 'hsl(var(--violet-500) / 0.25)',
+                  }}
+                >
+                  <span
+                    className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                    style={{
+                      width: active === i ? '100%' : '0%',
+                      background: 'hsl(var(--violet-400))',
+                      boxShadow: active === i ? '0 0 12px hsl(var(--violet-400) / 0.6)' : undefined,
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

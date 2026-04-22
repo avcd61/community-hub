@@ -1,15 +1,26 @@
-import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, Download, X } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  Download,
+  X,
+  Loader2,
+  Check,
+  ArrowUpRight,
+} from 'lucide-react';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { useReveal } from '@/hooks/use-reveal';
 
 import album1 from '@/assets/BulimPenis.webp';
 import album2 from '@/assets/album-2.webp';
 import album3 from '@/assets/gtabulib.webp';
 import album4 from '@/assets/1.webp';
-// Album 5 cover is animated — keep the MP4 for the loop and the webp as a poster.
 import album5Mp4 from '@/assets/Echo95.mp4';
 import album5Webm from '@/assets/Echo95.webm';
 import album5Poster from '@/assets/Echo95.webp';
@@ -46,7 +57,6 @@ const createAlbum = (
     }
     return { title: entry.title, file: entry.file };
   };
-
   return {
     id,
     title,
@@ -168,11 +178,11 @@ const albums: AlbumType[] = [
   ),
 ];
 
-// --- MP3 asset resolution -----------------------------------------------------
-// Map every bundled mp3 to its Vite-hashed URL so the player can resolve files
-// declared as "/music/Album5/Track.mp3" in the data above. Several key variants
-// are stored per file so lookups by basename, folder+basename, or title succeed.
-const modules = import.meta.glob('../assets/music/*/*.{mp3,MP3}', { eager: true }) as Record<string, { default?: string } | string>;
+// --- MP3 asset resolution (unchanged from previous edition) ------------------
+const modules = import.meta.glob('../assets/music/*/*.{mp3,MP3}', { eager: true }) as Record<
+  string,
+  { default?: string } | string
+>;
 const assetMap: Record<string, string> = {};
 for (const p in modules) {
   const mod = modules[p];
@@ -260,160 +270,366 @@ for (const album of albums) {
   }
 }
 
-// --- Component ----------------------------------------------------------------
+// --- helpers -----------------------------------------------------------------
+
+const formatTime = (s: number) => {
+  if (!Number.isFinite(s) || s <= 0) return '0:00';
+  const mins = Math.floor(s / 60);
+  const secs = Math.floor(s % 60);
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+};
+
+const safeFileName = (s: string) =>
+  s.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim();
+
+// --- Visualizer --------------------------------------------------------------
 
 /**
- * Music section — "FREQ.95 PLAYER". Album grid on top, a modal Winamp-style
- * player with terminal-chrome + a CSS equalizer visualizer.
- *
- * The data + asset-resolution block above is unchanged; this rewrite is purely
- * visual (and removes all framer-motion usage).
+ * Canvas FFT bars synced to a shared AnalyserNode. The analyser is owned by
+ * the Player component (one per audio element); this component just reads
+ * frequency data and draws.
  */
+const Visualizer = ({
+  analyser,
+  playing,
+}: {
+  analyser: AnalyserNode | null;
+  playing: boolean;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const fit = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(canvas);
+
+    const draw = () => {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      let data: Uint8Array | null = null;
+      if (analyser) {
+        data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+      }
+
+      const bars = 64;
+      const gap = 2;
+      const barW = Math.max(1, (w - gap * (bars - 1)) / bars);
+
+      for (let i = 0; i < bars; i++) {
+        // Logarithmic mapping so bass doesn't hog the left side.
+        const idx = Math.floor(Math.pow(i / bars, 1.6) * ((data?.length ?? 0) - 1));
+        const v = data ? data[idx] / 255 : playing ? 0.2 + Math.random() * 0.15 : 0.05;
+        const barH = Math.max(2, v * h * 0.95);
+        const x = i * (barW + gap);
+        const y = h - barH;
+        ctx.fillStyle = 'hsl(42 20% 94%)';
+        ctx.fillRect(x, y, barW, barH);
+      }
+
+      // Center waveform strand — thinner, overlaid.
+      if (analyser) {
+        const time = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(time);
+        ctx.beginPath();
+        ctx.strokeStyle = 'hsl(42 20% 94% / 0.45)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < time.length; i++) {
+          const x = (i / time.length) * w;
+          const y = (time[i] / 255) * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+    };
+  }, [analyser, playing]);
+
+  return <canvas ref={canvasRef} className="block w-full h-full" aria-hidden="true" />;
+};
+
+// --- Main section ------------------------------------------------------------
+
 const MusicSection = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumType | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(0);
-  const [progress, setProgress] = useState([0]);
-  const [volume, setVolume] = useState([70]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.7);
+  const [muted, setMuted] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
+
+  const [downloadState, setDownloadState] = useState<'idle' | 'fetching' | 'packing' | 'done' | 'error'>('idle');
+  const [downloadProgress, setDownloadProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lastEmitRef = useRef<number>(0);
-  const ref = useReveal<HTMLDivElement>();
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+
+  const sectionRef = useReveal<HTMLDivElement>();
+
+  const ensureAudioGraph = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audioCtxRef.current) {
+      const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.78;
+      const source = ctx.createMediaElementSource(audio);
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
+      sourceRef.current = source;
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      void audioCtxRef.current.resume();
+    }
+  }, []);
+
+  // Sync audio volume/muted state.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.volume = volume;
+    a.muted = muted;
+  }, [volume, muted]);
+
+  // Load track when album / index changes.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !selectedAlbum) return;
+    const track = selectedAlbum.tracks[currentTrack];
+    if (!track?.file) return;
+    if (audio.src !== track.file) {
+      audio.src = track.file;
+      audio.load();
+      setCurrentTime(0);
+      setDuration(0);
+      setAudioReady(false);
+    }
+    if (isPlaying) {
+      ensureAudioGraph();
+      audio.play().catch(() => setIsPlaying(false));
+    }
+  }, [selectedAlbum, currentTrack, isPlaying, ensureAudioGraph]);
+
+  // Audio event listeners.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => setCurrentTime(audio.currentTime);
+    const onLoaded = () => {
+      setDuration(audio.duration || 0);
+      setAudioReady(true);
+    };
+    const onEnded = () => {
+      if (!selectedAlbum) return;
+      setCurrentTrack((i) => (i < selectedAlbum.tracks.length - 1 ? i + 1 : 0));
+    };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    audio.addEventListener('timeupdate', onTime);
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
+    return () => {
+      audio.removeEventListener('timeupdate', onTime);
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
+    };
+  }, [selectedAlbum]);
+
+  // Keyboard shortcuts while player open.
+  useEffect(() => {
+    if (!selectedAlbum) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      if (e.key === 'Escape') {
+        closePlayer();
+      } else if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key === 'ArrowRight' && e.shiftKey) {
+        nextTrack();
+      } else if (e.key === 'ArrowLeft' && e.shiftKey) {
+        prevTrack();
+      } else if (e.key === 'ArrowRight') {
+        const a = audioRef.current;
+        if (a) a.currentTime = Math.min((a.duration || 0), a.currentTime + 5);
+      } else if (e.key === 'ArrowLeft') {
+        const a = audioRef.current;
+        if (a) a.currentTime = Math.max(0, a.currentTime - 5);
+      } else if (e.key === 'm' || e.key === 'M') {
+        setMuted((m) => !m);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedAlbum]);
 
   const openPlayer = (album: AlbumType) => {
     setSelectedAlbum(album);
     setCurrentTrack(0);
+    setCurrentTime(0);
+    setDuration(0);
     setIsPlaying(false);
-    setProgress([0]);
+    setDownloadState('idle');
   };
-
   const closePlayer = () => {
+    const a = audioRef.current;
+    if (a) {
+      a.pause();
+      a.removeAttribute('src');
+    }
     setSelectedAlbum(null);
     setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeAttribute('src');
+    setDownloadState('idle');
+  };
+  const togglePlay = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    ensureAudioGraph();
+    if (a.paused) {
+      a.play().catch(() => {});
+    } else {
+      a.pause();
     }
   };
-
   const nextTrack = () => {
     if (!selectedAlbum) return;
-    setCurrentTrack((prev) => (prev < selectedAlbum.tracks.length - 1 ? prev + 1 : 0));
-    setProgress([0]);
+    setCurrentTrack((i) => (i < selectedAlbum.tracks.length - 1 ? i + 1 : 0));
   };
-
   const prevTrack = () => {
     if (!selectedAlbum) return;
-    setCurrentTrack((prev) => (prev > 0 ? prev - 1 : selectedAlbum.tracks.length - 1));
-    setProgress([0]);
+    setCurrentTrack((i) => (i > 0 ? i - 1 : selectedAlbum.tracks.length - 1));
+  };
+  const seek = (pct: number) => {
+    const a = audioRef.current;
+    if (!a || !a.duration) return;
+    a.currentTime = (pct / 100) * a.duration;
   };
 
-  const formatTime = (s: number) => {
-    if (!s || s <= 0) return '0:00';
-    const mins = Math.floor(s / 60);
-    const secs = Math.floor(s % 60);
-    return `${mins}:${String(secs).padStart(2, '0')}`;
-  };
+  // --- ZIP download --------------------------------------------------------
+  const downloadAlbum = async () => {
+    if (!selectedAlbum || downloadState === 'fetching' || downloadState === 'packing') return;
+    const album = selectedAlbum;
+    const tracks = album.tracks.filter((t) => !!t.file);
+    if (!tracks.length) return;
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    setDownloadState('fetching');
+    setDownloadProgress({ done: 0, total: tracks.length });
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder(safeFileName(album.title)) ?? zip;
 
-    const track = selectedAlbum?.tracks[currentTrack];
-    if (track?.file && audio.src !== track.file) {
-      audio.src = track.file;
-      audio.load();
-      setProgress([0]);
-      setDuration(0);
-    }
-
-    const onLoaded = () => setDuration(Math.round(audio.duration || 0));
-    const onTime = () => {
-      if (!audio.duration) return;
-      const now = Date.now();
-      if (now - lastEmitRef.current > 500) {
-        setProgress([Math.round((audio.currentTime / audio.duration) * 100)]);
-        lastEmitRef.current = now;
+      for (let i = 0; i < tracks.length; i++) {
+        const t = tracks[i];
+        if (!t.file) continue;
+        const res = await fetch(t.file);
+        if (!res.ok) throw new Error(`Не удалось получить ${t.title}`);
+        const buf = await res.arrayBuffer();
+        const pad = String(i + 1).padStart(2, '0');
+        folder.file(`${pad} — ${safeFileName(t.title)}.mp3`, buf);
+        setDownloadProgress({ done: i + 1, total: tracks.length });
       }
-    };
-    const onEnded = () => nextTrack();
 
-    audio.addEventListener('loadedmetadata', onLoaded);
-    audio.addEventListener('timeupdate', onTime);
-    audio.addEventListener('ended', onEnded);
-
-    if (isPlaying) audio.play().catch(() => { /* user gesture may be required */ });
-    else audio.pause();
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', onLoaded);
-      audio.removeEventListener('timeupdate', onTime);
-      audio.removeEventListener('ended', onEnded);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAlbum, currentTrack, isPlaying]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = (volume[0] ?? 70) / 100;
-  }, [volume]);
-
-  const handleVolumeChange = (val: number[]) => {
-    setVolume(val);
-    if (audioRef.current) audioRef.current.volume = (val?.[0] ?? 70) / 100;
+      setDownloadState('packing');
+      const blob = await zip.generateAsync({
+        type: 'blob',
+        compression: 'STORE', // mp3 is already compressed; no point in DEFLATE
+      });
+      saveAs(blob, `${safeFileName(album.title)}.zip`);
+      setDownloadState('done');
+      setTimeout(() => setDownloadState('idle'), 2500);
+    } catch (err) {
+      console.error('[album-download]', err);
+      setDownloadState('error');
+      setTimeout(() => setDownloadState('idle'), 3500);
+    }
   };
 
-  const currentTrackTitle = selectedAlbum?.tracks[currentTrack]?.title
-    || selectedAlbum?.tracks[currentTrack]?.file?.split('/').pop()?.replace(/\.[^/.]+$/, '')
-    || '';
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const nowPlaying = selectedAlbum?.tracks[currentTrack];
 
   return (
-    <section id="music" className="relative py-20 md:py-28 border-b border-border">
+    <section id="music" className="relative section-shell py-24 md:py-32">
       <div className="section-container">
-        <div className="flex items-baseline justify-between mb-6">
-          <span className="eyebrow">№ 05 / FREQ.95 / АЛЬБОМЫ</span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground hidden md:inline">
-            [{albums.length.toString().padStart(2, '0')}_RELEASES_LOADED]
-          </span>
+        <div className="chapter-meta mb-8">
+          <span>№ IV</span>
+          <span className="opacity-50">/</span>
+          <span>АЛЬБОМЫ</span>
+          <span className="ml-auto opacity-50 hidden sm:inline">[FREQ.95_PLAYER]</span>
         </div>
 
-        <div ref={ref} className="reveal">
-          <h2 className="display-xl text-foreground mb-4">
-            АЛЬБО<span className="text-primary">МЫ</span>
-          </h2>
-          <p className="max-w-2xl text-foreground/80 text-base md:text-lg mb-12">
-            Музыка, созданная нашим сообществом с любовью и страстью. Нажми на обложку чтобы
-            вызвать плеер.
-          </p>
+        <div ref={sectionRef} className="reveal">
+          <div className="flex items-end justify-between flex-wrap gap-6 mb-10 md:mb-14">
+            <h2 className="display-xl text-balance">
+              ЗВУК <span className="font-serif-italic text-foreground/80" style={{ fontStyle: 'italic' }}>девяносто</span> ПЯТОГО
+            </h2>
+            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              {albums.length} альбома · {albums.reduce((s, a) => s + a.tracks.length, 0)} треков
+            </div>
+          </div>
 
-          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {albums.map((album, i) => (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            {albums.map((album, idx) => (
               <li
                 key={album.id}
+                className="relative group"
                 style={{
-                  animation: 'fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both',
-                  animationDelay: `${i * 70}ms`,
+                  animation: 'fade-up 0.7s cubic-bezier(0.2,0.9,0.2,1) both',
+                  animationDelay: `${idx * 80}ms`,
                 }}
               >
                 <button
                   type="button"
                   onClick={() => openPlayer(album)}
-                  className="group w-full text-left"
-                  aria-label={`Play ${album.title}`}
+                  className="block w-full text-left"
+                  aria-label={`Открыть альбом ${album.title}`}
                 >
-                  <div className="relative aspect-square border border-border bg-background overflow-hidden">
+                  <div className="relative aspect-square border border-border overflow-hidden bg-card">
                     {album.coverVideo ? (
                       <video
+                        autoPlay
                         muted
                         loop
-                        autoPlay
                         playsInline
-                        preload="none"
+                        preload="metadata"
                         poster={album.cover}
-                        width={360}
-                        height={360}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.05] transition-all duration-500 group-hover:grayscale-0 group-hover:scale-[1.03]"
                       >
                         <source src={album.coverVideo.webm} type="video/webm" />
                         <source src={album.coverVideo.mp4} type="video/mp4" />
@@ -424,31 +640,42 @@ const MusicSection = () => {
                         alt={album.title}
                         loading="lazy"
                         decoding="async"
-                        width={360}
-                        height={360}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.05] transition-all duration-500 group-hover:grayscale-0 group-hover:scale-[1.03]"
                       />
                     )}
-                    {/* ident overlay */}
-                    <div className="absolute top-2 left-2 font-mono text-[10px] uppercase tracking-[0.2em] text-primary bg-background/70 px-1.5 py-0.5 border border-primary/70">
-                      REL.{String(album.id).padStart(2, '0')}
+                    {/* corner ticks */}
+                    <span className="pointer-events-none absolute -top-px -left-px w-4 h-4 border-t border-l border-foreground/80" />
+                    <span className="pointer-events-none absolute -top-px -right-px w-4 h-4 border-t border-r border-foreground/80" />
+                    <span className="pointer-events-none absolute -bottom-px -left-px w-4 h-4 border-b border-l border-foreground/80" />
+                    <span className="pointer-events-none absolute -bottom-px -right-px w-4 h-4 border-b border-r border-foreground/80" />
+                    {/* play hover overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/0 group-hover:bg-background/45 transition-colors duration-300">
+                      <span className="w-14 h-14 border border-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Play className="w-5 h-5 fill-foreground text-foreground translate-x-[1px]" />
+                      </span>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-background/60">
-                      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-primary border border-primary px-3 py-2">
-                        <Play className="w-4 h-4 fill-primary" /> PLAY
-                      </div>
+                    {/* bottom strip */}
+                    <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-background/70 backdrop-blur-[2px] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.28em] text-foreground/80">
+                      <span>LP.0{album.id}</span>
+                      <span>{album.tracks.length} TRK</span>
                     </div>
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-primary" />
-                    <span className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-primary" />
                   </div>
-                  <div className="mt-3">
-                    <h3 className="font-display font-black uppercase text-sm md:text-base leading-tight text-foreground">
-                      {album.title}
-                    </h3>
-                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
-                      {album.artist} / {album.tracks.length} TR.
-                    </p>
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                      LP.0{album.id}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                      {album.artist}
+                    </span>
                   </div>
+                  <div className="mt-1 font-display uppercase text-xl md:text-2xl leading-none tracking-[-0.02em]">
+                    {album.title}
+                  </div>
+                  {album.description && (
+                    <div className="mt-2 text-sm text-foreground/65 line-clamp-2">
+                      {album.description}
+                    </div>
+                  )}
                 </button>
               </li>
             ))}
@@ -456,38 +683,34 @@ const MusicSection = () => {
         </div>
       </div>
 
+      {/* Shared audio element lives under the section even when player is closed. */}
+      <audio ref={audioRef} preload="none" crossOrigin="anonymous" />
+
+      {/* --- Player overlay -------------------------------------------------- */}
       {selectedAlbum && (
         <div
-          onClick={closePlayer}
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 animate-fade-in"
+          aria-label={`Плеер — ${selectedAlbum.title}`}
+          className="fixed inset-0 z-[80] flex items-end md:items-center justify-center bg-background/75 backdrop-blur-sm animate-fade-in p-0 md:p-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closePlayer();
+          }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="window w-full max-w-md animate-fade-up"
-          >
-            <div className="window-title">
-              <span>▓</span>
-              <span>FREQ.95_PLAYER.EXE</span>
-              <button
-                onClick={closePlayer}
-                className="ml-auto flex items-center justify-center w-5 h-5 text-primary-foreground hover:text-foreground hover:bg-background"
-                aria-label="Close player"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="window-body pt-10 p-5 md:p-6">
-              <div className="relative aspect-square border border-border overflow-hidden mb-5">
+          <div className="relative w-full md:max-w-[1100px] h-[92vh] md:h-auto md:max-h-[85vh] bg-card border-t border-border md:border overflow-hidden grid grid-rows-[auto_1fr] md:grid-rows-none md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+            {/* LEFT — cover + transport */}
+            <div className="relative bg-background border-b md:border-b-0 md:border-r border-border flex flex-col">
+              {/* cover */}
+              <div className="relative aspect-square w-full border-b border-border">
                 {selectedAlbum.coverVideo ? (
                   <video
+                    autoPlay
                     muted
                     loop
-                    autoPlay
                     playsInline
+                    preload="metadata"
                     poster={selectedAlbum.cover}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
                   >
                     <source src={selectedAlbum.coverVideo.webm} type="video/webm" />
                     <source src={selectedAlbum.coverVideo.mp4} type="video/mp4" />
@@ -495,90 +718,216 @@ const MusicSection = () => {
                 ) : (
                   <img
                     src={selectedAlbum.cover}
-                    alt={selectedAlbum.title}
-                    className="w-full h-full object-cover"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
-                {/* EQ visualizer */}
-                <div className="absolute bottom-0 inset-x-0 flex items-end justify-center gap-1 py-2 bg-background/70">
-                  {Array.from({ length: 18 }).map((_, i) => (
-                    <span
-                      key={i}
-                      className={`eq-bar ${!isPlaying ? 'opacity-30' : ''}`}
-                      style={{
-                        animationPlayState: isPlaying ? 'running' : 'paused',
-                        animationDelay: `${(i % 6) * 80}ms`,
-                        height: `${10 + (i % 5) * 5}px`,
-                      }}
-                    />
-                  ))}
+                {/* Visualizer overlayed at bottom — bars only visible while playing. */}
+                <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/95 to-transparent" />
+                  <div className="absolute inset-x-3 bottom-3 h-16 opacity-90">
+                    <Visualizer analyser={analyserRef.current} playing={isPlaying} />
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <div className="font-display font-black uppercase text-xl md:text-2xl leading-tight text-foreground">
+              {/* meta */}
+              <div className="p-5 border-b border-border">
+                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  LP.0{selectedAlbum.id} · {selectedAlbum.artist} · {selectedAlbum.tracks.length} TRK
+                </div>
+                <div className="mt-1 font-display uppercase text-2xl leading-none tracking-[-0.02em]">
                   {selectedAlbum.title}
                 </div>
-                <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground mt-1">
-                  {selectedAlbum.artist} / TRACK {String(currentTrack + 1).padStart(2, '0')}/
-                  {String(selectedAlbum.tracks.length).padStart(2, '0')}
+                <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-foreground truncate">
+                  {nowPlaying?.title ?? '—'}
                 </div>
               </div>
 
-              <audio ref={audioRef} preload="none" />
+              {/* transport */}
+              <div className="p-5 border-b border-border">
+                {/* seek */}
+                <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                  <span className="w-10 text-foreground">{formatTime(currentTime)}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={progress}
+                    onChange={(e) => seek(Number(e.target.value))}
+                    disabled={!audioReady}
+                    className="seek-range flex-1"
+                    aria-label="Позиция трека"
+                    style={{ '--val': `${progress}%` } as React.CSSProperties}
+                  />
+                  <span className="w-10 text-right">{formatTime(duration)}</span>
+                </div>
 
-              <div className="mb-3 font-mono text-sm text-foreground truncate">
-                <span className="text-primary">&gt; </span>
-                {currentTrackTitle}
-              </div>
+                {/* buttons */}
+                <div className="mt-5 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={prevTrack}
+                    className="w-11 h-11 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
+                    aria-label="Предыдущий"
+                  >
+                    <SkipBack className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    className="flex-1 h-11 border border-foreground bg-foreground text-background flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] transition-colors duration-200 hover:bg-transparent hover:text-foreground"
+                    aria-label={isPlaying ? 'Пауза' : 'Играть'}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 translate-x-[1px]" />}
+                    <span>{isPlaying ? 'Пауза' : 'Играть'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextTrack}
+                    className="w-11 h-11 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
+                    aria-label="Следующий"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                </div>
 
-              <div className="mb-5">
-                <Slider value={progress} onValueChange={() => { /* read-only */ }} max={100} step={1} />
-                <div className="flex justify-between text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mt-2">
-                  <span>{formatTime(Math.round((progress[0] / 100) * duration))}</span>
-                  <span>{formatTime(duration)}</span>
+                {/* volume */}
+                <div className="mt-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => setMuted((m) => !m)}
+                    className="w-7 h-7 flex items-center justify-center text-foreground"
+                    aria-label={muted ? 'Включить звук' : 'Выключить звук'}
+                  >
+                    {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={muted ? 0 : volume}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setVolume(v);
+                      if (v > 0 && muted) setMuted(false);
+                    }}
+                    className="seek-range flex-1"
+                    aria-label="Громкость"
+                    style={{ '--val': `${(muted ? 0 : volume) * 100}%` } as React.CSSProperties}
+                  />
+                  <span className="w-10 text-right text-foreground">
+                    {Math.round((muted ? 0 : volume) * 100)}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-3 mb-5">
+              {/* download + close */}
+              <div className="p-5 flex items-center gap-2 mt-auto">
                 <button
-                  onClick={prevTrack}
-                  className="w-10 h-10 flex items-center justify-center border border-border text-foreground hover:text-primary hover:border-primary"
-                  aria-label="Previous track"
+                  type="button"
+                  onClick={downloadAlbum}
+                  disabled={downloadState === 'fetching' || downloadState === 'packing'}
+                  className="flex-1 h-11 border border-border flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] transition-colors duration-200 hover:bg-foreground hover:text-background disabled:opacity-70 disabled:pointer-events-none"
                 >
-                  <SkipBack className="w-4 h-4" />
+                  {downloadState === 'fetching' || downloadState === 'packing' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>
+                        {downloadState === 'fetching'
+                          ? `Загрузка · ${downloadProgress.done}/${downloadProgress.total}`
+                          : 'Пакую ZIP…'}
+                      </span>
+                    </>
+                  ) : downloadState === 'done' ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Готово</span>
+                    </>
+                  ) : downloadState === 'error' ? (
+                    <>
+                      <X className="w-4 h-4" />
+                      <span>Ошибка — попробуй ещё</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>Скачать альбом (.zip)</span>
+                    </>
+                  )}
                 </button>
                 <button
-                  onClick={() => setIsPlaying((v) => !v)}
-                  className="w-12 h-12 flex items-center justify-center bg-primary text-primary-foreground border border-primary hover:bg-foreground hover:text-background"
-                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                  type="button"
+                  onClick={closePlayer}
+                  className="w-11 h-11 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
+                  aria-label="Закрыть плеер"
                 >
-                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                </button>
-                <button
-                  onClick={nextTrack}
-                  className="w-10 h-10 flex items-center justify-center border border-border text-foreground hover:text-primary hover:border-primary"
-                  aria-label="Next track"
-                >
-                  <SkipForward className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
+            </div>
 
-              <div className="flex items-center gap-3 mb-5">
-                <Volume2 className="w-4 h-4 text-muted-foreground" />
-                <Slider value={volume} onValueChange={handleVolumeChange} max={100} step={1} className="flex-1" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground w-8 text-right">
-                  {String(volume[0]).padStart(2, '0')}
+            {/* RIGHT — track list */}
+            <div className="relative overflow-y-auto">
+              <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border px-5 py-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                <span>трек-лист · {selectedAlbum.tracks.length}</span>
+                <span>
+                  <ArrowUpRight className="inline w-3 h-3 mr-1" />
+                  SPACE = play/pause · ←/→ ±5s · shift+←/→ = prev/next
                 </span>
               </div>
-
-              <Button
-                variant="outline"
-                className="w-full h-10 font-mono text-[11px] uppercase tracking-[0.25em] rounded-none border-border hover:border-primary hover:text-primary"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Скачать альбом
-              </Button>
+              <ol className="divide-y divide-border">
+                {selectedAlbum.tracks.map((t, i) => {
+                  const active = i === currentTrack;
+                  return (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (active) togglePlay();
+                          else {
+                            setCurrentTrack(i);
+                            setIsPlaying(true);
+                          }
+                        }}
+                        className={`w-full text-left flex items-center gap-4 px-5 py-4 transition-colors duration-150 ${
+                          active ? 'bg-foreground text-background' : 'hover:bg-foreground/5'
+                        }`}
+                      >
+                        <span className={`w-8 font-mono text-[11px] tabular-nums ${active ? 'text-background/70' : 'text-muted-foreground'}`}>
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span className="flex-1 min-w-0 truncate text-sm md:text-base">
+                          {t.title}
+                        </span>
+                        <span className="flex items-center gap-3">
+                          {active && isPlaying ? (
+                            <span className="flex items-end gap-[2px] h-4" aria-hidden="true">
+                              {[0, 1, 2, 3].map((k) => (
+                                <span
+                                  key={k}
+                                  className="eq-bar"
+                                  style={{
+                                    height: '100%',
+                                    color: 'currentColor',
+                                    animationDelay: `${k * 120}ms`,
+                                  }}
+                                />
+                              ))}
+                            </span>
+                          ) : active ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-3.5 h-3.5 opacity-40" />
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
             </div>
           </div>
         </div>

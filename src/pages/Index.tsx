@@ -2,11 +2,10 @@ import { lazy, Suspense } from 'react';
 
 import Header from '@/components/Header';
 import HeroCarousel from '@/components/HeroCarousel';
-import InteractivePlaceholders from '@/components/InteractivePlaceholders';
 import AboutSection from '@/components/AboutSection';
 import ServerIdentity from '@/components/ServerIdentity';
 import Footer from '@/components/Footer';
-import CursorSpotlight from '@/components/CursorSpotlight';
+import SiteBackground from '@/components/SiteBackground';
 
 // Heavy / below-the-fold sections: code-split & stream in on demand.
 const MusicSection = lazy(() => import('@/components/MusicSection'));
@@ -17,7 +16,7 @@ const SectionFallback = ({ label }: { label: string }) => (
   <div className="py-24 border-b border-border">
     <div className="section-container">
       <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-        <span className="text-primary">&gt;</span> LOADING {label} <span className="caret" />
+        <span className="text-foreground">&gt;</span> LOADING {label}
       </div>
     </div>
   </div>
@@ -26,11 +25,11 @@ const SectionFallback = ({ label }: { label: string }) => (
 const Index = () => {
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
+      <SiteBackground />
       <Header />
 
-      <main>
+      <main className="relative z-10">
         <HeroCarousel />
-        <InteractivePlaceholders />
         <AboutSection />
         <ServerIdentity />
 
@@ -48,8 +47,6 @@ const Index = () => {
       </main>
 
       <Footer />
-
-      <CursorSpotlight />
     </div>
   );
 };

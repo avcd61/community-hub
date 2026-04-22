@@ -2,7 +2,12 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -14,8 +19,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Unbounded", "Space Grotesk", "system-ui", "sans-serif"],
+        sans: ["Inter Tight", "Inter", "system-ui", "sans-serif"],
+        display: ["Syne", "Inter Tight", "system-ui", "sans-serif"],
+        serif: ["Instrument Serif", "Georgia", "serif"],
         mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       colors: {
@@ -52,9 +58,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Broadcast-specific
-        signal: "hsl(var(--signal))",
-        phosphor: "hsl(var(--phosphor))",
+        violet: {
+          50:  "hsl(var(--violet-50))",
+          300: "hsl(var(--violet-300))",
+          400: "hsl(var(--violet-400))",
+          500: "hsl(var(--violet-500))",
+          600: "hsl(var(--violet-600))",
+          700: "hsl(var(--violet-700))",
+          900: "hsl(var(--violet-900))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -70,64 +82,20 @@ export default {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
-        "ticker": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
+        "float-y": {
+          "0%,100%": { transform: "translateY(0)" },
+          "50%":     { transform: "translateY(-8px)" },
         },
-        "blink": {
-          "0%, 49%": { opacity: "1" },
-          "50%, 100%": { opacity: "0" },
-        },
-        "signal-pulse": {
-          "0%, 100%": { opacity: "1", transform: "scale(1)" },
-          "50%": { opacity: "0.55", transform: "scale(0.85)" },
-        },
-        "scan": {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(100vh)" },
-        },
-        "eq": {
-          "0%, 100%": { transform: "scaleY(0.25)" },
-          "50%": { transform: "scaleY(1)" },
-        },
-        "rise": {
-          "0%":   { opacity: "0", transform: "translateY(110%)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "glitch-x": {
-          "0%, 92%, 100%": { transform: "translateX(0)" },
-          "93%":           { transform: "translateX(-3px) skewX(-4deg)" },
-          "94%":           { transform: "translateX(3px) skewX(3deg)" },
-          "95%":           { transform: "translateX(-2px) skewX(-2deg)" },
-          "96%":           { transform: "translateX(1px) skewX(1deg)" },
-          "97%":           { transform: "translateX(0)" },
-        },
-        "grain": {
-          "0%":   { transform: "translate(0, 0)" },
-          "20%":  { transform: "translate(-3%, 2%)" },
-          "40%":  { transform: "translate(2%, -3%)" },
-          "60%":  { transform: "translate(-1%, 1%)" },
-          "80%":  { transform: "translate(3%, 2%)" },
-          "100%": { transform: "translate(0, 0)" },
-        },
-        "marquee-reverse": {
-          "0%":   { transform: "translateX(-50%)" },
-          "100%": { transform: "translateX(0)" },
+        "spin-slow": {
+          "0%":   { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
         },
       },
       animation: {
-        "fade-up": "fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "fade-up": "fade-up 0.8s cubic-bezier(0.2,0.9,0.2,1) both",
         "fade-in": "fade-in 0.6s ease-out both",
-        "ticker": "ticker 45s linear infinite",
-        "ticker-fast": "ticker 22s linear infinite",
-        "ticker-reverse": "marquee-reverse 55s linear infinite",
-        "blink": "blink 1s steps(2, start) infinite",
-        "signal-pulse": "signal-pulse 1.4s ease-in-out infinite",
-        "scan": "scan 6s linear infinite",
-        "eq": "eq 0.9s ease-in-out infinite",
-        "rise": "rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both",
-        "glitch-x": "glitch-x 6s ease-in-out infinite",
-        "grain": "grain 1.1s steps(6) infinite",
+        "float-y": "float-y 5s ease-in-out infinite",
+        "spin-slow": "spin-slow 24s linear infinite",
       },
     },
   },

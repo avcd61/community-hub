@@ -1,257 +1,284 @@
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
-import member1 from '@/assets/member-1.webp';
-import member2 from '@/assets/member-2.webp';
-import member3 from '@/assets/member-3.webp';
-import member4 from '@/assets/member-4.webp';
+import CharRise from '@/components/CharRise';
+import Marquee from '@/components/Marquee';
+import { useReveal } from '@/hooks/use-reveal';
 
-interface Channel {
-  id: number;
-  name: string;
-  role: string;
-  quote: string;
-  avatar: string;
-  buttonUrl: string;
-  buttonText: string;
-}
+import andrewCutout from '@/assets/Andrew.cutout.webp';
+import brishaMp4 from '@/assets/Brisha.mp4';
+import brishaWebm from '@/assets/Brisha.webm';
+import brishaPoster from '@/assets/Brisha.webp';
+import doghAudio from '@/assets/Dogh.mp4';
 
-const channels: Channel[] = [
+const channels = [
   {
-    id: 1,
-    name: 'Дискорд сервер',
+    label: 'Дискорд',
     role: 'Обитель завозов',
-    quote: 'В этом месте сидят 95 братухи и делают завозы каждый день',
-    avatar: member1,
-    buttonUrl: 'https://discord.com/invite/PNnSKWNhYE',
-    buttonText: 'Присоединиться',
+    quote: 'Пиздецки смешные мемчики каждый день',
+    url: 'https://discord.com/invite/PNnSKWNhYE',
+    cta: 'Присоединиться',
   },
   {
-    id: 2,
-    name: 'Ютуб канал 95 братко',
-    role: 'Фильмы достойные оскара',
-    quote: 'Лучший ютуб канал стоящий на уровне мистера Макса и мисс Кейти',
-    avatar: member2,
-    buttonUrl: 'https://www.youtube.com/@ФСР95',
-    buttonText: 'Перейти на канал',
+    label: 'YouTube',
+    role: 'Фильмы уровня Оскара',
+    quote: 'ФСР-95 бросает вызов мистеру Максу',
+    url: 'https://www.youtube.com/@ФСР95',
+    cta: 'Смотреть',
   },
   {
-    id: 3,
-    name: 'Отрицательно живая группа стим',
-    role: 'Там есть докич',
-    quote: 'Группа 95 братко в стиме где нет актива но есть докич',
-    avatar: member3,
-    buttonUrl: 'https://steamcommunity.com/groups/FRSOOfficial',
-    buttonText: 'Посетить кладбище',
+    label: 'Steam',
+    role: 'Кладбище с Докичем',
+    quote: 'Актива нет — есть докич и легенда',
+    url: 'https://steamcommunity.com/groups/FRSOOfficial',
+    cta: 'Навестить',
   },
   {
-    id: 4,
-    name: 'Труха 95',
-    role: '95 кружков жратвы бульменя',
-    quote: 'Здесь показана жизнь и быт ФСРа ну и ещё как бульмень готовит',
-    avatar: member4,
-    buttonUrl: 'https://t.me/+abSXXaH4cf9hNTky',
-    buttonText: 'Залететь в труху',
+    label: 'Telegram',
+    role: 'Труха 95',
+    quote: 'Как бульмень готовит кружки',
+    url: 'https://t.me/+abSXXaH4cf9hNTky',
+    cta: 'В трубу',
   },
 ];
 
 /**
- * Hero — a full broadcast "channel guide". Instead of a carousel that
- * hides 3 of 4 destinations behind a click, all four are shown as rows
- * in a TV-guide table. Each row is a link; the whole row highlights
- * amber on hover/focus. Keeps the avatars at a natural 1:1 size so they
- * don't get chopped by a 21:9 crop.
- *
- * No framer-motion, no carousel state; CSS-only interactions.
+ * Hero. Three layered things:
+ *   1. Big kinetic title "ЗАВОЗЯМБА" with a serif italic "edition" callout.
+ *   2. Bottom dock of channel links with index numerals and row-inversion on hover.
+ *   3. Two floating cutouts (Brisha + Andrew) positioned as decorative elements
+ *      that react on hover (slight parallax/scale) — they don't crop the layout.
  */
 const HeroCarousel = () => {
+  const ref = useReveal<HTMLDivElement>();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+
+  const playDogh = () => {
+    if (!audioRef.current) {
+      const a = new Audio(doghAudio);
+      a.preload = 'none';
+      audioRef.current = a;
+    }
+    const a = audioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    let raf = 0;
+    let tx = 0;
+    let ty = 0;
+    const onMove = (e: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      tx = (e.clientX - cx) / rect.width;
+      ty = (e.clientY - cy) / rect.height;
+      if (!raf) {
+        raf = requestAnimationFrame(() => {
+          setParallax({ x: tx, y: ty });
+          raf = 0;
+        });
+      }
+    };
+    const onLeave = () => setParallax({ x: 0, y: 0 });
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    if (!coarse) {
+      el.addEventListener('pointermove', onMove);
+      el.addEventListener('pointerleave', onLeave);
+    }
+    return () => {
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', onLeave);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <section
       id="hero"
-      className="relative pt-14 md:pt-16 border-b border-border overflow-hidden"
+      className="relative section-shell pt-24 md:pt-28 overflow-hidden"
     >
-      {/* Ticker — thin marquee bar under the header. Two opposing rows feel busier without being loud. */}
-      <div className="relative border-y border-border bg-card/70 overflow-hidden">
-        <div className="relative h-7 overflow-hidden">
-          <div className="flex whitespace-nowrap animate-ticker will-change-transform">
-            {Array.from({ length: 2 }).map((_, dup) => (
-              <div
-                key={dup}
-                className="flex items-center gap-8 px-4 font-mono text-[11px] uppercase tracking-[0.25em] text-foreground"
-              >
-                <span>◾ FSR-95 BROADCAST LIVE</span>
-                <span className="text-muted-foreground">// САМЫЕ ЗАВОЗНЫЕ 95 БРАТУХИ</span>
-                <span>◾ CH.95 / MHZ 1995.00</span>
-                <span className="text-muted-foreground">// АНДРЕЙ — ЛУЧШИЙ АДМИН</span>
-                <span>◾ DO NOT ADJUST YOUR SET</span>
-                <span className="text-muted-foreground">// ЗАВОЗЯМБА</span>
-                <span>◾ FSR-95 BROADCAST LIVE</span>
-                <span className="text-muted-foreground">// САМЫЕ ЗАВОЗНЫЕ 95 БРАТУХИ</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="relative h-7 overflow-hidden border-t border-border bg-foreground text-background">
-          <div className="flex whitespace-nowrap animate-ticker-reverse will-change-transform">
-            {Array.from({ length: 2 }).map((_, dup) => (
-              <div
-                key={dup}
-                className="flex items-center gap-8 px-4 font-mono text-[11px] uppercase tracking-[0.25em]"
-              >
-                <span>▮ NO COLOR // ALL SIGNAL</span>
-                <span className="opacity-70">// MONO EDITION v0.95</span>
-                <span>▮ ANALOG IS THE MESSAGE</span>
-                <span className="opacity-70">// BRISHA ▸ ANDREW ▸ БУЛЬМЕНЬ ▸ ДОКИЧ</span>
-                <span>▮ STAY ON CHANNEL 95</span>
-                <span className="opacity-70">// NO TINT — JUST INK</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Top marquee */}
+      <Marquee duration={42}>
+        <span>FSR-95 BROADCAST LIVE</span>
+        <span className="dot-sep" />
+        <span className="opacity-60">ЗАВОЗЯМБА · EDITION II</span>
+        <span className="dot-sep" />
+        <span>НИ ОДНОГО ДНЯ БЕЗ ЗАВОЗА</span>
+        <span className="dot-sep" />
+        <span className="opacity-60">АНДРЕЙ — ЛУЧШИЙ АДМИН</span>
+        <span className="dot-sep" />
+        <span>95,000+ БРАТУХ</span>
+        <span className="dot-sep" />
+      </Marquee>
 
-      <div className="section-container pt-10 md:pt-14 pb-10 md:pb-14">
-        {/* Station identity */}
-        <div className="flex items-center gap-3 flex-wrap mb-5">
-          <span className="chip chip-signal">
-            <span className="on-air-dot" /> TRANSMISSION
-          </span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-            EST. 2024 // MHZ 1995.00
-          </span>
-        </div>
-
-        <h1
-          className="font-display font-black uppercase leading-[0.88] tracking-[-0.02em] text-foreground overflow-hidden"
-          style={{ fontSize: 'clamp(2.5rem, 8vw, 6.5rem)' }}
+      <div ref={wrapRef} className="relative">
+        {/* Floating cutouts (behind the title content, above the bg canvas) */}
+        <div
+          className="pointer-events-none absolute top-[8%] left-[-4%] w-[34%] max-w-[440px] min-w-[180px] opacity-95 z-[5]"
+          style={{
+            transform: `translate3d(${parallax.x * -18}px, ${parallax.y * -12}px, 0)`,
+            transition: 'transform 0.35s cubic-bezier(0.2,0.9,0.2,1)',
+          }}
         >
-          <span className="char-rise inline-block align-baseline" aria-hidden="true">
-            {'ЗАВО'.split('').map((c, i) => (
-              <span key={`a-${i}`} style={{ ['--i' as never]: i }}>{c}</span>
-            ))}
-          </span>
-          <span
-            className="char-rise inline-block align-baseline bg-foreground text-background px-1 md:px-2 ml-0.5 md:ml-1"
-            aria-hidden="true"
+          <button
+            type="button"
+            onClick={playDogh}
+            aria-label="Брыша — нажми"
+            className="pointer-events-auto block w-full"
           >
-            {'ЗЯМБА'.split('').map((c, i) => (
-              <span key={`b-${i}`} style={{ ['--i' as never]: 4 + i }}>{c}</span>
-            ))}
-          </span>
-          <span className="char-rise inline-block align-baseline ml-3 md:ml-5 text-foreground/40" aria-hidden="true">
-            <span style={{ ['--i' as never]: 9 }}>№</span>
-          </span>
-          <span className="char-rise inline-block align-baseline text-foreground glitch-x" aria-hidden="true">
-            <span style={{ ['--i' as never]: 10 }}>9</span>
-            <span style={{ ['--i' as never]: 11 }}>5</span>
-          </span>
-          <span className="sr-only">ЗАВОЗЯМБА №95</span>
-        </h1>
+            <video
+              muted
+              loop
+              autoPlay
+              playsInline
+              preload="none"
+              poster={brishaPoster}
+              className="block w-full h-auto object-contain"
+              width={1920}
+              height={1080}
+            >
+              <source src={brishaWebm} type="video/webm" />
+              <source src={brishaMp4} type="video/mp4" />
+            </video>
+          </button>
+        </div>
 
-        <p
-          className="mt-5 max-w-2xl text-foreground/75 text-base md:text-lg leading-relaxed animate-fade-up"
-          style={{ animationDelay: '650ms' }}
+        <div
+          className="pointer-events-none absolute bottom-[-4%] right-[-4%] w-[36%] max-w-[460px] min-w-[200px] opacity-95 z-[5]"
+          style={{
+            transform: `translate3d(${parallax.x * 18}px, ${parallax.y * 14}px, 0)`,
+            transition: 'transform 0.35s cubic-bezier(0.2,0.9,0.2,1)',
+          }}
         >
-          Ретрансляция криворожского андеграунда. Музыка, Minecraft, мемы и 95
-          братух в прямом эфире. Ниже — все каналы,{' '}
-          <span className="bg-foreground text-background px-1">выбирай любой</span>.
-        </p>
+          <a
+            href="https://www.youtube.com/@ФСР95"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Andrew — на YouTube"
+            className="pointer-events-auto block w-full"
+          >
+            <img
+              src={andrewCutout}
+              alt=""
+              loading="eager"
+              decoding="async"
+              className="block w-full h-auto object-contain"
+            />
+          </a>
+        </div>
 
-        {/* Channel guide — TV-guide table of all 4 destinations */}
-        <div className="mt-10 md:mt-14">
-          <div className="flex items-baseline justify-between mb-4">
-            <span className="eyebrow">// CHANNEL GUIDE</span>
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-              [{String(channels.length).padStart(2, '0')}_CHANNELS_ON_AIR]
+        <div ref={ref} className="section-container relative z-10 pt-12 md:pt-20 pb-16 md:pb-24 reveal">
+          {/* Eyebrow */}
+          <div className="chapter-meta mb-8 md:mb-12">
+            <span className="pulse-dot" />
+            <span className="text-foreground">CH.95 TRANSMISSION</span>
+            <span className="hidden md:inline opacity-60">/ EST. 2024</span>
+            <span className="ml-auto opacity-60 hidden sm:inline">
+              <span className="font-serif-italic text-foreground/80 text-[15px] not-italic-tracking">Edition II</span>
             </span>
           </div>
 
-          <ul className="border border-border bg-border grid gap-px">
+          {/* Title */}
+          <h1 className="font-display uppercase text-foreground leading-[0.86] tracking-[-0.03em]">
+            <span className="block text-[clamp(3rem,10vw,9rem)]">
+              <CharRise text="ЗАВО" stepMs={40} />
+            </span>
+            <span className="block text-[clamp(3rem,10vw,9rem)] relative">
+              <span className="inline-block bg-foreground text-background px-[0.1em]">
+                <CharRise text="ЗЯМБА" startDelay={120} stepMs={40} />
+              </span>
+              <span
+                className="font-serif-italic not-italic-tracking ml-4 md:ml-6 align-middle text-foreground/70"
+                style={{ fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontStyle: 'italic' }}
+              >
+                №&nbsp;95
+              </span>
+            </span>
+          </h1>
+
+          {/* Sub-copy */}
+          <p className="mt-8 max-w-2xl text-base md:text-lg text-foreground/75 leading-relaxed text-balance">
+            Клуб на 95,000+ братух. Завозы, альбомы, Frontierland MC, ежедневный
+            контент. Никаких полутонов — только ч/б и сигнал.
+          </p>
+
+          {/* CTA row */}
+          <div className="mt-8 md:mt-10 flex flex-wrap items-center gap-3">
+            <a
+              href="https://discord.com/invite/PNnSKWNhYE"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-solid group"
+            >
+              <span>Залететь в дискорд</span>
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-[2px] group-hover:-translate-y-[2px]" />
+            </a>
+            <a href="#music" className="btn-invert group">
+              <span>Слушать альбомы</span>
+              <span className="opacity-60">↓</span>
+            </a>
+            <div className="ml-auto hidden md:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              <span>{'['}</span>
+              {[0, 1, 2, 3].map((i) => (
+                <span
+                  key={i}
+                  className="eq-bar"
+                  style={{
+                    height: '18px',
+                    animationDelay: `${i * 120}ms`,
+                    color: 'hsl(var(--foreground))',
+                  }}
+                />
+              ))}
+              <span>{']'}</span>
+              <span>SIGNAL STABLE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Channels dock — 4 rows */}
+        <div className="relative z-10 section-container pb-16 md:pb-24">
+          <div className="chapter-meta mb-4">
+            <span>&gt;</span>
+            <span>ГАЙД КАНАЛОВ / 04 ИСТОЧНИКА СИГНАЛА</span>
+          </div>
+          <ul className="border-y border-border">
             {channels.map((ch, i) => (
-              <li key={ch.id} className="bg-card">
+              <li key={ch.label} className="border-b border-border last:border-b-0">
                 <a
-                  href={ch.buttonUrl}
+                  href={ch.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative grid grid-cols-[auto_auto_1fr_auto] md:grid-cols-[auto_auto_1fr_auto_auto] items-center gap-4 md:gap-6 p-4 md:p-5 transition-colors hover:bg-foreground hover:text-background focus-visible:bg-foreground focus-visible:text-background"
-                  style={{
-                    animation: 'fade-up 0.55s cubic-bezier(0.16,1,0.3,1) both',
-                    animationDelay: `${80 + i * 70}ms`,
-                  }}
+                  className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-8 py-5 md:py-6 transition-colors duration-200 hover:bg-foreground hover:text-background px-2 md:px-4"
                 >
-                  {/* Channel code */}
-                  <div className="font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] text-foreground w-12 md:w-16 shrink-0">
-                    CH.{String(i + 1).padStart(2, '0')}
-                  </div>
-
-                  {/* Avatar in a viewfinder frame */}
-                  <div className="relative w-14 h-14 md:w-20 md:h-20 shrink-0 border border-border bg-background overflow-hidden">
-                    <img
-                      src={ch.avatar}
-                      alt={ch.name}
-                      loading={i === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      width={160}
-                      height={160}
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute top-0.5 left-0.5 w-2 h-2 border-t-2 border-l-2 border-foreground" />
-                    <span className="absolute top-0.5 right-0.5 w-2 h-2 border-t-2 border-r-2 border-foreground" />
-                    <span className="absolute bottom-0.5 left-0.5 w-2 h-2 border-b-2 border-l-2 border-foreground" />
-                    <span className="absolute bottom-0.5 right-0.5 w-2 h-2 border-b-2 border-r-2 border-foreground" />
-                  </div>
-
-                  {/* Name / role / quote */}
-                  <div className="min-w-0">
-                    <div className="flex items-baseline gap-3 flex-wrap">
-                      <h2 className="font-display font-black uppercase leading-none tracking-[-0.01em] text-lg md:text-2xl transition-colors">
-                        {ch.name}
-                      </h2>
-                      <span className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background/70 group-focus-visible:text-background/70 transition-colors">
-                        // {ch.role}
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-foreground/70 text-xs md:text-sm leading-snug line-clamp-2 md:line-clamp-1 group-hover:text-background/80 group-focus-visible:text-background/80 transition-colors">
-                      «{ch.quote}»
-                    </p>
-                  </div>
-
-                  {/* CTA text (hidden on narrow, visible md+) */}
-                  <span className="hidden md:inline-block font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background group-focus-visible:text-background transition-colors">
-                    {ch.buttonText}
+                  <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground group-hover:text-background/70 w-[3ch]">
+                    0{i + 1}
                   </span>
-
-                  {/* Arrow chip */}
-                  <span
-                    className="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 border border-border text-foreground group-hover:bg-background group-hover:text-foreground group-hover:border-background group-focus-visible:bg-background group-focus-visible:text-foreground transition-all group-hover:-translate-x-0 group-hover:-translate-y-0 overflow-hidden relative"
-                    aria-hidden="true"
-                  >
-                    <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-3 group-hover:-translate-y-3" />
-                    <ArrowUpRight className="w-4 h-4 absolute -translate-x-4 translate-y-4 transition-transform duration-300 group-hover:translate-x-0 group-hover:translate-y-0" />
+                  <div className="min-w-0">
+                    <div className="font-display uppercase text-xl md:text-3xl leading-none tracking-[-0.02em]">
+                      {ch.label}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-foreground/70 group-hover:text-background/80">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground group-hover:text-background/60 border border-border group-hover:border-background/40 px-2 py-0.5">
+                        {ch.role}
+                      </span>
+                      <span className="truncate">{ch.quote}</span>
+                    </div>
+                  </div>
+                  <span className="flex items-center gap-2 md:gap-3 font-mono text-[11px] uppercase tracking-[0.25em]">
+                    <span className="hidden md:inline">{ch.cta}</span>
+                    <ArrowUpRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
                   </span>
                 </a>
               </li>
             ))}
           </ul>
-
-          {/* Footnote: EQ bars + frequency dial */}
-          <div className="mt-6 flex items-center justify-between gap-4">
-            <div className="flex items-end gap-1 h-6" aria-hidden="true">
-              {Array.from({ length: 14 }).map((_, i) => (
-                <span
-                  key={i}
-                  className="eq-bar"
-                  style={{
-                    animationDelay: `${(i % 7) * 80}ms`,
-                    height: `${10 + (i % 5) * 4}px`,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-              CH.95 <span className="text-foreground">//</span> 1995.00 MHz{' '}
-              <span className="text-foreground caret" />
-            </div>
-          </div>
         </div>
       </div>
     </section>
