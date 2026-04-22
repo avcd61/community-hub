@@ -10,17 +10,32 @@ const socials = [
 ];
 
 /**
- * Footer wordmark — a large "95" rendered as an SVG with a stepped
- * extrusion behind a solid fill, plus a slow stroke-chase animation
- * travelling along the glyph outline. The previous iteration added a
- * rotating text ring and a `scale()` breathe animation on the digits;
- * both were removed because idle transforms on such a large element
- * read as the whole page gently rocking up and down.
+ * Kinetic "95" wordmark. Five stacked SVG layers, all animated via
+ * non-layout-affecting properties (stroke-dashoffset, opacity, and a
+ * transformed rect that lives inside a clipPath — the clipPath keeps the
+ * moving band visually confined to the glyph shape only):
  *
- * All animation here is opacity / stroke-dashoffset based — nothing
- * translates or scales, so there is zero perceivable movement of the
- * surrounding layout.
+ *   1. Stepped extrusion (7 back ghosts) — static depth.
+ *   2. Solid fill.
+ *   3. Scan band — bright horizontal gradient wipes down through the
+ *      digits via a clipPath. Visible but can't escape the glyph bbox.
+ *   4. Pulsing blurred glow outline.
+ *   5. Two running-light outlines chasing in opposite directions for
+ *      the kinetic feel.
+ *
+ * Plus a subtle CRT-style flicker on the whole group so the wordmark
+ * reads as a live sign rather than static type.
  */
+const GLYPH_PROPS = {
+  x: 500,
+  y: 300,
+  textAnchor: 'middle' as const,
+  fontFamily: 'Syne, sans-serif',
+  fontWeight: 800,
+  fontSize: 360,
+  letterSpacing: -10,
+};
+
 const KineticWordmark = () => {
   return (
     <div
@@ -28,12 +43,31 @@ const KineticWordmark = () => {
       aria-hidden="true"
       style={{ width: 'min(100%, 880px)' }}
     >
-      <svg viewBox="0 0 1000 360" className="relative block w-full h-auto">
+      <svg
+        viewBox="0 0 1000 360"
+        className="relative block w-full h-auto"
+        style={{ animation: 'footer-flicker 6.5s steps(1, end) infinite' }}
+      >
         <defs>
           <linearGradient id="footer-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="1" />
             <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.82" />
           </linearGradient>
+
+          {/* Vertical bright band used by the scan animation. */}
+          <linearGradient id="footer-scan-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="hsl(var(--foreground))" stopOpacity="0" />
+            <stop offset="45%"  stopColor="hsl(var(--foreground))" stopOpacity="0" />
+            <stop offset="50%"  stopColor="hsl(var(--foreground))" stopOpacity="0.95" />
+            <stop offset="55%"  stopColor="hsl(var(--foreground))" stopOpacity="0" />
+            <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Clip path shaped as the "95" glyphs — keeps the scan band
+              visually inside the digits. */}
+          <clipPath id="footer-clip">
+            <text {...GLYPH_PROPS}>95</text>
+          </clipPath>
         </defs>
 
         {/* Back ghosts — stepped extrusion behind the fill. */}
@@ -42,13 +76,7 @@ const KineticWordmark = () => {
           return (
             <text
               key={i}
-              x="500"
-              y="300"
-              textAnchor="middle"
-              fontFamily="Syne, sans-serif"
-              fontWeight={800}
-              fontSize="360"
-              letterSpacing="-10"
+              {...GLYPH_PROPS}
               fill="none"
               stroke="hsl(var(--foreground))"
               strokeOpacity={0.08 + i * 0.035}
@@ -61,62 +89,71 @@ const KineticWordmark = () => {
         })}
 
         {/* Solid fill. */}
-        <text
-          x="500"
-          y="300"
-          textAnchor="middle"
-          fontFamily="Syne, sans-serif"
-          fontWeight={800}
-          fontSize="360"
-          letterSpacing="-10"
-          fill="url(#footer-fill)"
-        >
+        <text {...GLYPH_PROPS} fill="url(#footer-fill)">
           95
         </text>
 
-        {/* Glow outline — soft pulsing ghost sitting flush on top of the
-            fill. Pure opacity animation, no transform. */}
+        {/* Scan band — a tall rectangle clipped to the glyph shape. The
+            rect itself is 3× the svg height; translating it -33%..33%
+            sweeps the bright middle band through the visible area. */}
+        <g clipPath="url(#footer-clip)">
+          <rect
+            x="0"
+            y="-360"
+            width="1000"
+            height="1080"
+            fill="url(#footer-scan-grad)"
+            style={{
+              animation: 'footer-scan 3.6s linear infinite',
+              transformOrigin: '50% 50%',
+            }}
+          />
+        </g>
+
+        {/* Pulsing blurred glow outline. */}
         <text
-          x="500"
-          y="300"
-          textAnchor="middle"
-          fontFamily="Syne, sans-serif"
-          fontWeight={800}
-          fontSize="360"
-          letterSpacing="-10"
+          {...GLYPH_PROPS}
           fill="none"
           stroke="hsl(var(--foreground))"
-          strokeWidth="3"
+          strokeWidth="8"
           style={{
-            animation: 'footer-glow 5.2s ease-in-out infinite',
-            filter: 'blur(6px)',
+            animation: 'footer-glow 3.4s ease-in-out infinite',
+            filter: 'blur(10px)',
           }}
         >
           95
         </text>
 
-        {/* Running-light outline — a dashed stroke whose offset animates
-            so a bright segment slides around the glyph perimeter. */}
+        {/* Forward running-light — bright, chunky dash sliding clockwise. */}
         <text
-          x="500"
-          y="300"
-          textAnchor="middle"
-          fontFamily="Syne, sans-serif"
-          fontWeight={800}
-          fontSize="360"
-          letterSpacing="-10"
+          {...GLYPH_PROPS}
           fill="none"
           stroke="hsl(var(--foreground))"
-          strokeOpacity={0.95}
+          strokeOpacity={1}
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray="140 1120"
+          style={{ animation: 'footer-chase 3.6s linear infinite' }}
+        >
+          95
+        </text>
+
+        {/* Reverse running-light — thinner, faster, counter-clockwise. */}
+        <text
+          {...GLYPH_PROPS}
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeOpacity={0.85}
           strokeWidth="2"
-          strokeDasharray="80 1180"
-          style={{ animation: 'footer-chase 6s linear infinite' }}
+          strokeLinecap="round"
+          strokeDasharray="40 1220"
+          style={{ animation: 'footer-chase-reverse 2.4s linear infinite' }}
         >
           95
         </text>
       </svg>
 
-      {/* Quiet typographic sig — no per-letter bob. */}
+      {/* Quiet typographic sig. */}
       <div className="mt-4 text-center font-mono text-[11px] md:text-[13px] uppercase tracking-[0.45em] text-muted-foreground">
         FSR · 95 · BROADCAST
       </div>
