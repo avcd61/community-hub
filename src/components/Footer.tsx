@@ -10,19 +10,16 @@ const socials = [
 ];
 
 /**
- * Footer wordmark — a large "95" rendered as an SVG so we can layer a
- * stroked extrusion behind a solid fill with perfect pixel alignment (no
- * font-offset drift that CSS WebkitTextStroke has). Around it, a slow
- * rotating ring of mono labels carries the kinetic energy.
+ * Footer wordmark — a large "95" rendered as an SVG with a stepped
+ * extrusion behind a solid fill, plus a slow stroke-chase animation
+ * travelling along the glyph outline. The previous iteration added a
+ * rotating text ring and a `scale()` breathe animation on the digits;
+ * both were removed because idle transforms on such a large element
+ * read as the whole page gently rocking up and down.
  *
- * Why SVG instead of the previous CSS stack:
- * - The old footer layered CSS `WebkitTextStroke` ghosts on top of a
- *   filled `<span>` with a `mix-blend-mode: difference` scanning band.
- *   On a fixed dark page the scan band clipped the digits horizontally
- *   and looked like the "95" was cracked in half. SVG text is the
- *   predictable way to stack stroke + fill without any blend mode.
- * - Everything animates via CSS keyframes defined in index.css so we
- *   don't ship per-component <style> blocks.
+ * All animation here is opacity / stroke-dashoffset based — nothing
+ * translates or scales, so there is zero perceivable movement of the
+ * surrounding layout.
  */
 const KineticWordmark = () => {
   return (
@@ -31,53 +28,15 @@ const KineticWordmark = () => {
       aria-hidden="true"
       style={{ width: 'min(100%, 880px)' }}
     >
-      {/* Rotating ring behind the digits. */}
-      <svg
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        width="560"
-        height="560"
-        viewBox="0 0 560 560"
-        style={{
-          animation: 'spin-slow 46s linear infinite',
-          maxWidth: '86vw',
-          maxHeight: '86vw',
-        }}
-      >
-        <defs>
-          <path
-            id="footer-ring"
-            d="M 280,280 m -230,0 a 230,230 0 1,1 460,0 a 230,230 0 1,1 -460,0"
-            fill="none"
-          />
-        </defs>
-        <text
-          fontFamily="JetBrains Mono, monospace"
-          fontSize="16"
-          letterSpacing="10"
-          fill="hsl(var(--foreground))"
-          opacity="0.45"
-          textLength="1420"
-        >
-          <textPath href="#footer-ring" startOffset="0">
-            FSR · 95 · BROADCAST · EDITION II · ZЫBRO · НИ ОДНОГО ДНЯ БЕЗ ЗАВОЗА · 95 000+ БРАТУХ · ФСР · 95 ·
-          </textPath>
-        </text>
-      </svg>
-
-      {/* The "95" itself — extruded via stacked stroked copies, no blend mode. */}
-      <svg
-        viewBox="0 0 1000 360"
-        className="relative block w-full h-auto"
-        style={{ animation: 'footer-breathe 7s ease-in-out infinite' }}
-      >
+      <svg viewBox="0 0 1000 360" className="relative block w-full h-auto">
         <defs>
           <linearGradient id="footer-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="1" />
             <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.82" />
           </linearGradient>
         </defs>
-        {/* Back ghosts — each one offset upward so the digits read as a
-            stepped extrusion. Opacities fade back into the bg. */}
+
+        {/* Back ghosts — stepped extrusion behind the fill. */}
         {Array.from({ length: 7 }).map((_, i) => {
           const d = 7 - i;
           return (
@@ -100,7 +59,8 @@ const KineticWordmark = () => {
             </text>
           );
         })}
-        {/* Fill (front). */}
+
+        {/* Solid fill. */}
         <text
           x="500"
           y="300"
@@ -113,24 +73,52 @@ const KineticWordmark = () => {
         >
           95
         </text>
+
+        {/* Glow outline — soft pulsing ghost sitting flush on top of the
+            fill. Pure opacity animation, no transform. */}
+        <text
+          x="500"
+          y="300"
+          textAnchor="middle"
+          fontFamily="Syne, sans-serif"
+          fontWeight={800}
+          fontSize="360"
+          letterSpacing="-10"
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="3"
+          style={{
+            animation: 'footer-glow 5.2s ease-in-out infinite',
+            filter: 'blur(6px)',
+          }}
+        >
+          95
+        </text>
+
+        {/* Running-light outline — a dashed stroke whose offset animates
+            so a bright segment slides around the glyph perimeter. */}
+        <text
+          x="500"
+          y="300"
+          textAnchor="middle"
+          fontFamily="Syne, sans-serif"
+          fontWeight={800}
+          fontSize="360"
+          letterSpacing="-10"
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeOpacity={0.95}
+          strokeWidth="2"
+          strokeDasharray="80 1180"
+          style={{ animation: 'footer-chase 6s linear infinite' }}
+        >
+          95
+        </text>
       </svg>
 
-      {/* Per-letter FSR label under the digits with staggered bob. */}
-      <div className="mt-3 md:mt-5 flex items-center justify-center gap-[0.55em] font-mono text-[11px] md:text-[13px] uppercase tracking-[0.45em] text-muted-foreground">
-        {['F', 'S', 'R', '·', '9', '5', '·', 'B', 'R', 'O', 'A', 'D', 'C', 'A', 'S', 'T'].map(
-          (ch, i) => (
-            <span
-              key={i}
-              className="inline-block"
-              style={{
-                animation: 'footer-bob 2.6s ease-in-out infinite',
-                animationDelay: `${i * 80}ms`,
-              }}
-            >
-              {ch}
-            </span>
-          )
-        )}
+      {/* Quiet typographic sig — no per-letter bob. */}
+      <div className="mt-4 text-center font-mono text-[11px] md:text-[13px] uppercase tracking-[0.45em] text-muted-foreground">
+        FSR · 95 · BROADCAST
       </div>
     </div>
   );

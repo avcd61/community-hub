@@ -503,14 +503,21 @@
   50%      { transform: translateY(-8px); }
 }
 
-@keyframes footer-breathe {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(-2px) scale(1.012); }
+/*
+  Footer wordmark animations.
+  Intentionally NO `transform` / `translate` / `scale` keyframes here —
+  idle transforms on the big '95' were visually interpreted as the whole
+  page "rocking". All animation is done via stroke-dashoffset + opacity
+  so nothing in the SVG box moves spatially.
+*/
+@keyframes footer-chase {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -1260; }
 }
 
-@keyframes footer-bob {
-  0%, 100% { transform: translateY(0); opacity: 0.72; }
-  50%      { transform: translateY(-4px); opacity: 1; }
+@keyframes footer-glow {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.85; }
 }
 
 @keyframes gold-shimmer {
