@@ -11,6 +11,8 @@ import {
   Loader2,
   Check,
   ArrowUpRight,
+  Minus,
+  Maximize2,
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -375,6 +377,11 @@ const Visualizer = ({
 
 const MusicSection = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumType | null>(null);
+  /*
+    Modal visibility is decoupled from whether an album is loaded so that
+    closing the big player keeps playback alive (mini player takes over).
+  */
+  const [modalOpen, setModalOpen] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -478,7 +485,7 @@ const MusicSection = () => {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
       if (e.key === 'Escape') {
-        closePlayer();
+        if (modalOpen) minimizePlayer();
       } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
         togglePlay();
@@ -498,23 +505,40 @@ const MusicSection = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedAlbum]);
+  }, [selectedAlbum, modalOpen]);
 
   const openPlayer = (album: AlbumType) => {
-    setSelectedAlbum(album);
-    setCurrentTrack(0);
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
+    const sameAlbum = selectedAlbum?.id === album.id;
+    if (!sameAlbum) {
+      setSelectedAlbum(album);
+      setCurrentTrack(0);
+      setCurrentTime(0);
+      setDuration(0);
+      setIsPlaying(false);
+    }
+    setModalOpen(true);
     setDownloadState('idle');
   };
-  const closePlayer = () => {
+  /*
+    Minimise the modal but keep audio + analyser + selection alive so the
+    mini-player can drive playback from the corner.
+  */
+  const minimizePlayer = () => {
+    setModalOpen(false);
+    setDownloadState('idle');
+  };
+  const expandPlayer = () => {
+    if (selectedAlbum) setModalOpen(true);
+  };
+  /* Fully stop and unload the shared audio element. */
+  const stopPlayer = () => {
     const a = audioRef.current;
     if (a) {
       a.pause();
       a.removeAttribute('src');
     }
     setSelectedAlbum(null);
+    setModalOpen(false);
     setIsPlaying(false);
     setDownloadState('idle');
   };
@@ -687,14 +711,14 @@ const MusicSection = () => {
       <audio ref={audioRef} preload="none" crossOrigin="anonymous" />
 
       {/* --- Player overlay -------------------------------------------------- */}
-      {selectedAlbum && (
+      {selectedAlbum && modalOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={`Плеер — ${selectedAlbum.title}`}
           className="fixed inset-0 z-[80] flex items-end md:items-center justify-center bg-background/75 backdrop-blur-sm animate-fade-in p-0 md:p-6"
           onClick={(e) => {
-            if (e.target === e.currentTarget) closePlayer();
+            if (e.target === e.currentTarget) minimizePlayer();
           }}
         >
           <div className="relative w-full md:max-w-[1100px] h-[92vh] md:h-auto md:max-h-[85vh] bg-card border-t border-border md:border overflow-hidden grid grid-rows-[auto_1fr] md:grid-rows-none md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
@@ -860,9 +884,19 @@ const MusicSection = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={closePlayer}
+                  onClick={minimizePlayer}
                   className="w-11 h-11 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
-                  aria-label="Закрыть плеер"
+                  aria-label="Свернуть плеер"
+                  title="Свернуть (плеер продолжит играть)"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={stopPlayer}
+                  className="w-11 h-11 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
+                  aria-label="Остановить и закрыть"
+                  title="Остановить и закрыть"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -929,6 +963,144 @@ const MusicSection = () => {
                 })}
               </ol>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Mini player (persists when modal is minimised) ------------------ */}
+      {selectedAlbum && !modalOpen && (
+        <div
+          role="region"
+          aria-label={`Мини-плеер — ${selectedAlbum.title}`}
+          className="fixed z-[70] bottom-4 right-4 w-[min(92vw,340px)] bg-card border border-border shadow-[0_12px_40px_-12px_hsl(0_0%_0%/0.6)] animate-fade-in"
+        >
+          {/* Progress bar at top — click to seek. */}
+          <button
+            type="button"
+            aria-label="Перемотка"
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const pct = ((e.clientX - rect.left) / rect.width) * 100;
+              seek(Math.max(0, Math.min(100, pct)));
+            }}
+            className="block w-full h-1 bg-border/60 relative overflow-hidden"
+          >
+            <span
+              className="absolute inset-y-0 left-0 bg-foreground"
+              style={{ width: `${progress}%` }}
+            />
+          </button>
+
+          <div className="flex items-stretch gap-3 p-3">
+            {/* Cover */}
+            <button
+              type="button"
+              onClick={expandPlayer}
+              className="relative w-14 h-14 shrink-0 overflow-hidden border border-border group"
+              aria-label="Развернуть плеер"
+              title="Развернуть плеер"
+            >
+              {selectedAlbum.coverVideo ? (
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster={selectedAlbum.cover}
+                  className="absolute inset-0 w-full h-full object-cover"
+                >
+                  <source src={selectedAlbum.coverVideo.webm} type="video/webm" />
+                  <source src={selectedAlbum.coverVideo.mp4} type="video/mp4" />
+                </video>
+              ) : (
+                <img
+                  src={selectedAlbum.cover}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                />
+              )}
+              {/* EQ overlay while playing */}
+              {isPlaying && (
+                <span className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-background/85 to-transparent flex items-end justify-center gap-[2px] pb-[3px]" aria-hidden="true">
+                  {[0, 1, 2, 3].map((k) => (
+                    <span
+                      key={k}
+                      className="eq-bar"
+                      style={{ height: '100%', animationDelay: `${k * 120}ms` }}
+                    />
+                  ))}
+                </span>
+              )}
+            </button>
+
+            {/* Meta */}
+            <button
+              type="button"
+              onClick={expandPlayer}
+              className="flex-1 min-w-0 text-left"
+              aria-label="Развернуть плеер"
+            >
+              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground truncate">
+                LP.0{selectedAlbum.id} · {selectedAlbum.artist}
+              </div>
+              <div className="mt-0.5 text-sm font-medium truncate">
+                {nowPlaying?.title ?? selectedAlbum.title}
+              </div>
+              <div className="mt-0.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+                {formatTime(currentTime)} · {formatTime(duration)}
+              </div>
+            </button>
+
+            {/* Transport + controls */}
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={prevTrack}
+                className="w-9 h-9 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
+                aria-label="Предыдущий трек"
+              >
+                <SkipBack className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={togglePlay}
+                className="w-9 h-9 bg-foreground text-background flex items-center justify-center transition-colors duration-200 hover:bg-foreground/80"
+                aria-label={isPlaying ? 'Пауза' : 'Играть'}
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-[1px]" />}
+              </button>
+              <button
+                type="button"
+                onClick={nextTrack}
+                className="w-9 h-9 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
+                aria-label="Следующий трек"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Footer actions: expand / stop */}
+          <div className="flex border-t border-border text-[10px] font-mono uppercase tracking-[0.28em]">
+            <button
+              type="button"
+              onClick={expandPlayer}
+              className="flex-1 h-8 flex items-center justify-center gap-2 transition-colors duration-200 hover:bg-foreground hover:text-background"
+              aria-label="Развернуть плеер"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span>Развернуть</span>
+            </button>
+            <button
+              type="button"
+              onClick={stopPlayer}
+              className="w-10 h-8 flex items-center justify-center border-l border-border transition-colors duration-200 hover:bg-foreground hover:text-background"
+              aria-label="Остановить и закрыть"
+              title="Остановить и закрыть"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}
