@@ -7,10 +7,16 @@ interface Episode {
   n: string;
   title: string;
   synopsis: string;
-  /** YouTube video id — thumbnail is pulled from i.ytimg.com. */
-  ytId: string;
-  url: string;
+  /**
+   * YouTube video id — thumbnail is pulled from i.ytimg.com. Omitted for
+   * the teaser slot (episode 07 — not filmed yet, rendered as `???`).
+   */
+  ytId?: string;
+  /** External URL. Omitted for the teaser slot. */
+  url?: string;
   bonus?: boolean;
+  /** True for the unreleased "???" teaser card. */
+  tba?: boolean;
 }
 
 /**
@@ -76,10 +82,16 @@ const episodes: Episode[] = [
   },
   {
     n: '06',
-    title: 'Финал · Месть',
-    synopsis: 'Финал сериала. Счёт сравнялся.',
+    title: 'Шестая',
+    synopsis: 'Счёт сравнивается. Месть берёт своё.',
     ytId: 'JPtac4MUTvw',
     url: 'https://www.youtube.com/watch?v=JPtac4MUTvw&t=1051s',
+  },
+  {
+    n: '07',
+    title: '???',
+    synopsis: 'Седьмая серия ещё не снята. Дата выхода будет позже.',
+    tba: true,
   },
 ];
 
@@ -227,20 +239,46 @@ const ImageCarousel = () => {
                   data-slide={i}
                   className="relative snap-center shrink-0 w-full aspect-[16/9] md:aspect-[21/9] group"
                 >
-                  <img
-                    src={ytThumb(ep.ytId)}
-                    alt={ep.title}
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                    onError={(e) => {
-                      const img = e.currentTarget;
-                      if (!img.dataset.fallback) {
-                        img.dataset.fallback = '1';
-                        img.src = ytThumbFallback(ep.ytId);
-                      }
-                    }}
-                  />
+                  {ep.tba || !ep.ytId ? (
+                    // Teaser slot — no thumbnail yet, show giant gold
+                    // "???" placeholder on matte black.
+                    <div
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{
+                        background:
+                          'radial-gradient(65% 75% at 50% 55%, #231f0c 0%, #0c0c0c 78%)',
+                      }}
+                    >
+                      <div
+                        className="font-display uppercase leading-none tracking-[-0.02em]"
+                        style={{
+                          fontSize: 'clamp(6rem, 22vw, 20rem)',
+                          color: GOLD,
+                          textShadow:
+                            '0 0 40px rgba(255,215,0,0.28), 0 0 120px rgba(255,215,0,0.12)',
+                          opacity: 0.9,
+                        }}
+                        aria-hidden="true"
+                      >
+                        ???
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={ytThumb(ep.ytId)}
+                      alt={ep.title}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        if (!img.dataset.fallback && ep.ytId) {
+                          img.dataset.fallback = '1';
+                          img.src = ytThumbFallback(ep.ytId);
+                        }
+                      }}
+                    />
+                  )}
                   {/* Duotone gold-wash */}
                   <div
                     className="absolute inset-0 mix-blend-multiply"
@@ -292,7 +330,13 @@ const ImageCarousel = () => {
                           boxShadow: `0 0 10px ${GOLD}`,
                         }}
                       />
-                      <span>{ep.bonus ? 'INTERLUDE' : `EPISODE · ${ep.n}`}</span>
+                      <span>
+                        {ep.tba
+                          ? `TBA · EP ${ep.n}`
+                          : ep.bonus
+                          ? 'INTERLUDE'
+                          : `EPISODE · ${ep.n}`}
+                      </span>
                     </span>
                     {ep.bonus ? (
                       <span
@@ -304,6 +348,17 @@ const ImageCarousel = () => {
                         }}
                       >
                         BONUS · 03.5
+                      </span>
+                    ) : ep.tba ? (
+                      <span
+                        className="px-2 py-0.5 font-mono text-[10px] tracking-[0.3em]"
+                        style={{
+                          border: `1px solid ${GOLD}`,
+                          color: GOLD,
+                          fontWeight: 700,
+                        }}
+                      >
+                        COMING SOON
                       </span>
                     ) : (
                       <span style={{ color: GOLD, opacity: 0.75 }}>FSR-95 · MELLSTROY REVENGE</span>
@@ -317,7 +372,11 @@ const ImageCarousel = () => {
                         className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.3em] mb-2"
                         style={{ color: GOLD, opacity: 0.8 }}
                       >
-                        {ep.bonus ? 'BONUS · 03.5' : `№ ${ep.n}`}
+                        {ep.bonus
+                          ? 'BONUS · 03.5'
+                          : ep.tba
+                          ? `№ ${ep.n} · TBA`
+                          : `№ ${ep.n}`}
                       </div>
                       <div
                         className="font-display uppercase tracking-[-0.02em] leading-[0.9] text-balance max-w-[22ch]"
@@ -336,22 +395,38 @@ const ImageCarousel = () => {
                         {ep.synopsis}
                       </p>
                     </div>
-                    <a
-                      href={ep.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 inline-flex items-center gap-2 px-5 md:px-6 h-11 md:h-12 font-mono text-[11px] uppercase tracking-[0.25em] transition-transform duration-200 hover:-translate-y-0.5"
-                      style={{
-                        background: RED,
-                        color: '#FFF',
-                        boxShadow:
-                          '0 10px 30px -10px rgba(230,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.12)',
-                        fontWeight: 700,
-                      }}
-                    >
-                      <Play className="w-4 h-4" fill="currentColor" />
-                      <span>Смотреть</span>
-                    </a>
+                    {ep.tba || !ep.url ? (
+                      <span
+                        className="shrink-0 inline-flex items-center gap-2 px-5 md:px-6 h-11 md:h-12 font-mono text-[11px] uppercase tracking-[0.25em] cursor-not-allowed"
+                        style={{
+                          background: 'transparent',
+                          color: GOLD,
+                          border: `1px solid ${GOLD}55`,
+                          opacity: 0.75,
+                          fontWeight: 700,
+                        }}
+                        aria-disabled="true"
+                      >
+                        <span>Скоро</span>
+                      </span>
+                    ) : (
+                      <a
+                        href={ep.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 inline-flex items-center gap-2 px-5 md:px-6 h-11 md:h-12 font-mono text-[11px] uppercase tracking-[0.25em] transition-transform duration-200 hover:-translate-y-0.5"
+                        style={{
+                          background: RED,
+                          color: '#FFF',
+                          boxShadow:
+                            '0 10px 30px -10px rgba(230,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.12)',
+                          fontWeight: 700,
+                        }}
+                      >
+                        <Play className="w-4 h-4" fill="currentColor" />
+                        <span>Смотреть</span>
+                      </a>
+                    )}
                   </div>
                 </article>
               ))}

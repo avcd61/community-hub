@@ -64,10 +64,14 @@
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
-
+  /*
+    Note on scroll-behavior:
+    We intentionally do NOT set `scroll-behavior: smooth` globally. When
+    combined with wheel/trackpad momentum and animated elements on the
+    page, global smooth scrolling can feel like the page is softly
+    bouncing up/down at idle. Smooth scroll is opted into per-call (e.g.
+    `scrollTo({ behavior: 'smooth' })` for "К началу").
+  */
   html, body {
     overflow-x: hidden;
   }
