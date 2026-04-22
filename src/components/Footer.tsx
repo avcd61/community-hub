@@ -10,149 +10,128 @@ const socials = [
 ];
 
 /**
- * Kinetic 3D wordmark — the big "95" that pulses and rotates on a
- * perspective axis. Multiple stacked ghost copies create the extrusion feel,
- * each offset in Z. An SVG text-on-path ring spins around the digits.
+ * Footer wordmark — a large "95" rendered as an SVG so we can layer a
+ * stroked extrusion behind a solid fill with perfect pixel alignment (no
+ * font-offset drift that CSS WebkitTextStroke has). Around it, a slow
+ * rotating ring of mono labels carries the kinetic energy.
  *
- * Uses CSS keyframes only (no libraries). Respects prefers-reduced-motion
- * via the global override in index.css.
+ * Why SVG instead of the previous CSS stack:
+ * - The old footer layered CSS `WebkitTextStroke` ghosts on top of a
+ *   filled `<span>` with a `mix-blend-mode: difference` scanning band.
+ *   On a fixed dark page the scan band clipped the digits horizontally
+ *   and looked like the "95" was cracked in half. SVG text is the
+ *   predictable way to stack stroke + fill without any blend mode.
+ * - Everything animates via CSS keyframes defined in index.css so we
+ *   don't ship per-component <style> blocks.
  */
 const KineticWordmark = () => {
-  const ghosts = Array.from({ length: 7 });
   return (
-    <div className="relative select-none pointer-events-none" aria-hidden="true">
-      {/* Rotating text ring behind digits */}
+    <div
+      className="relative mx-auto select-none pointer-events-none"
+      aria-hidden="true"
+      style={{ width: 'min(100%, 880px)' }}
+    >
+      {/* Rotating ring behind the digits. */}
       <svg
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        width="520"
-        height="520"
-        viewBox="0 0 520 520"
+        width="560"
+        height="560"
+        viewBox="0 0 560 560"
         style={{
-          animation: 'spin-slow 38s linear infinite',
-          maxWidth: '72vw',
-          maxHeight: '72vw',
+          animation: 'spin-slow 46s linear infinite',
+          maxWidth: '86vw',
+          maxHeight: '86vw',
         }}
       >
         <defs>
           <path
             id="footer-ring"
-            d="M 260,260 m -210,0 a 210,210 0 1,1 420,0 a 210,210 0 1,1 -420,0"
+            d="M 280,280 m -230,0 a 230,230 0 1,1 460,0 a 230,230 0 1,1 -460,0"
             fill="none"
           />
         </defs>
         <text
           fontFamily="JetBrains Mono, monospace"
-          fontSize="17"
-          letterSpacing="12"
+          fontSize="16"
+          letterSpacing="10"
           fill="hsl(var(--foreground))"
-          opacity="0.55"
-          textLength="1270"
+          opacity="0.45"
+          textLength="1420"
         >
           <textPath href="#footer-ring" startOffset="0">
-            FSR · 95 · BROADCAST · EDITION II · ZЫBRO · НИ ОДНОГО ДНЯ БЕЗ ЗАВОЗА · 95,000+ БРАТУХ ·
+            FSR · 95 · BROADCAST · EDITION II · ZЫBRO · НИ ОДНОГО ДНЯ БЕЗ ЗАВОЗА · 95 000+ БРАТУХ · ФСР · 95 ·
           </textPath>
         </text>
       </svg>
 
-      {/* 3D-extruded "95" */}
-      <div
-        className="relative mx-auto"
-        style={{ perspective: '1200px', width: 'min(100%, 900px)' }}
+      {/* The "95" itself — extruded via stacked stroked copies, no blend mode. */}
+      <svg
+        viewBox="0 0 1000 360"
+        className="relative block w-full h-auto"
+        style={{ animation: 'footer-breathe 7s ease-in-out infinite' }}
       >
-        <div
-          className="relative font-display uppercase leading-[0.75] tracking-[-0.05em] text-center"
-          style={{
-            fontSize: 'clamp(10rem, 28vw, 26rem)',
-            transformStyle: 'preserve-3d',
-            animation: 'footer-tilt 9s ease-in-out infinite',
-          }}
-        >
-          {/* Extruded ghost stack (behind the main fill) */}
-          {ghosts.map((_, i) => {
-            const depth = ghosts.length - i;
-            return (
-              <span
-                key={i}
-                className="absolute inset-0 font-display uppercase leading-[0.75] tracking-[-0.05em]"
-                style={{
-                  WebkitTextStroke: '1px hsl(var(--foreground))',
-                  color: 'transparent',
-                  transform: `translateZ(${-depth * 14}px)`,
-                  opacity: 0.08 + i * 0.03,
-                }}
-              >
-                95
-              </span>
-            );
-          })}
-
-          {/* Fill */}
-          <span
-            className="relative block"
-            style={{
-              color: 'hsl(var(--foreground))',
-              transform: 'translateZ(4px)',
-            }}
-          >
-            95
-          </span>
-
-          {/* Front scanning highlight */}
-          <span
-            className="absolute inset-0 block"
-            style={{
-              background:
-                'linear-gradient(180deg, hsl(var(--foreground) / 0) 0%, hsl(var(--foreground) / 0.85) 50%, hsl(var(--foreground) / 0) 100%)',
-              WebkitMaskImage:
-                'linear-gradient(180deg, transparent 40%, black 48%, black 52%, transparent 60%)',
-              maskImage:
-                'linear-gradient(180deg, transparent 40%, black 48%, black 52%, transparent 60%)',
-              color: 'hsl(var(--background))',
-              mixBlendMode: 'difference',
-              animation: 'footer-scan 3.4s ease-in-out infinite',
-            }}
-          >
-            <span className="font-display uppercase leading-[0.75] tracking-[-0.05em]">
+        <defs>
+          <linearGradient id="footer-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="1" />
+            <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.82" />
+          </linearGradient>
+        </defs>
+        {/* Back ghosts — each one offset upward so the digits read as a
+            stepped extrusion. Opacities fade back into the bg. */}
+        {Array.from({ length: 7 }).map((_, i) => {
+          const d = 7 - i;
+          return (
+            <text
+              key={i}
+              x="500"
+              y="300"
+              textAnchor="middle"
+              fontFamily="Syne, sans-serif"
+              fontWeight={800}
+              fontSize="360"
+              letterSpacing="-10"
+              fill="none"
+              stroke="hsl(var(--foreground))"
+              strokeOpacity={0.08 + i * 0.035}
+              strokeWidth="1.5"
+              transform={`translate(${d * 2}, ${-d * 6})`}
+            >
               95
+            </text>
+          );
+        })}
+        {/* Fill (front). */}
+        <text
+          x="500"
+          y="300"
+          textAnchor="middle"
+          fontFamily="Syne, sans-serif"
+          fontWeight={800}
+          fontSize="360"
+          letterSpacing="-10"
+          fill="url(#footer-fill)"
+        >
+          95
+        </text>
+      </svg>
+
+      {/* Per-letter FSR label under the digits with staggered bob. */}
+      <div className="mt-3 md:mt-5 flex items-center justify-center gap-[0.55em] font-mono text-[11px] md:text-[13px] uppercase tracking-[0.45em] text-muted-foreground">
+        {['F', 'S', 'R', '·', '9', '5', '·', 'B', 'R', 'O', 'A', 'D', 'C', 'A', 'S', 'T'].map(
+          (ch, i) => (
+            <span
+              key={i}
+              className="inline-block"
+              style={{
+                animation: 'footer-bob 2.6s ease-in-out infinite',
+                animationDelay: `${i * 80}ms`,
+              }}
+            >
+              {ch}
             </span>
-          </span>
-        </div>
-
-        {/* Split FSR label under the 95 with per-letter animation */}
-        <div className="mt-2 md:mt-4 flex items-center justify-center gap-[0.6em] font-mono text-[11px] md:text-[13px] uppercase tracking-[0.45em] text-muted-foreground">
-          {['F', 'S', 'R', '·', '9', '5', '·', 'B', 'R', 'O', 'A', 'D', 'C', 'A', 'S', 'T'].map(
-            (ch, i) => (
-              <span
-                key={i}
-                className="inline-block"
-                style={{
-                  animation: 'footer-bob 2.4s ease-in-out infinite',
-                  animationDelay: `${i * 80}ms`,
-                }}
-              >
-                {ch}
-              </span>
-            )
-          )}
-        </div>
+          )
+        )}
       </div>
-
-      <style>{`
-        @keyframes footer-tilt {
-          0%,100% { transform: rotateX(8deg) rotateY(-6deg); }
-          50%     { transform: rotateX(-4deg) rotateY(6deg); }
-        }
-        @keyframes footer-scan {
-          0%,100% { opacity: 0.0; transform: translateY(-8%); }
-          45%     { opacity: 0.9; transform: translateY(0%); }
-          55%     { opacity: 0.9; transform: translateY(0%); }
-          100%    { opacity: 0.0; transform: translateY(8%); }
-        }
-        @keyframes footer-bob {
-          0%,100% { transform: translateY(0); opacity: 0.75; }
-          50%     { transform: translateY(-4px); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };
@@ -174,11 +153,10 @@ const Footer = () => {
         <span className="dot-sep" />
       </Marquee>
 
-      {/* Kinetic 3D wordmark. */}
       <div className="section-container py-20 md:py-28 relative">
         <KineticWordmark />
 
-        <div className="mt-16 md:mt-24 grid md:grid-cols-[minmax(0,1fr)_auto] gap-10 md:gap-14 items-end">
+        <div className="mt-14 md:mt-20 grid md:grid-cols-[minmax(0,1fr)_auto] gap-10 md:gap-14 items-end">
           <div>
             <div className="chapter-meta mb-3">
               <span className="pulse-dot" />

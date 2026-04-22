@@ -499,6 +499,26 @@
   50%      { transform: translateY(-8px); }
 }
 
+@keyframes footer-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-2px) scale(1.012); }
+}
+
+@keyframes footer-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.72; }
+  50%      { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes gold-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes red-pulse {
+  0%, 100% { text-shadow: 0 0 22px rgba(230,0,0,0.35), 0 0 60px rgba(230,0,0,0.18); }
+  50%      { text-shadow: 0 0 32px rgba(230,0,0,0.6),  0 0 90px rgba(230,0,0,0.32); }
+}
+
 /* Reduced motion — disable all auto-looping animations. */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track,

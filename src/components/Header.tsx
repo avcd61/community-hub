@@ -8,7 +8,7 @@ const navLinks = [
   { label: 'Ростер', href: '#about', index: 'II' },
   { label: 'Альбомы', href: '#music', index: 'III' },
   { label: 'Frontierland', href: '#frontierland', index: 'IV' },
-  { label: 'Федот', href: '#reel', index: 'V' },
+  { label: 'Меллстрой', href: '#reel', index: 'V' },
 ];
 
 /**

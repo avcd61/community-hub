@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Copy, Check, ArrowUpRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 
 import { useReveal } from '@/hooks/use-reveal';
 
@@ -147,18 +147,6 @@ const FrontierlandSection = () => {
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? 'Скопировано' : 'Скопировать IP'}</span>
               </button>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href="https://discord.com/invite/PNnSKWNhYE"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-violet"
-              >
-                <span>Дискорд сервера</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </a>
             </div>
 
             {/* Pillars grid */}
