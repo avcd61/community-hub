@@ -13,6 +13,7 @@ import fl7 from '@/assets/FL7.webp';
 import fl8 from '@/assets/FL8.webp';
 import fl9 from '@/assets/FL9.webp';
 import fl10 from '@/assets/FL10.webp';
+import fl11 from '@/assets/FL11.webp';
 
 /*
   In-game screenshots from Frontierland. Caption is a short Cyrillic
@@ -30,6 +31,7 @@ const screenshots: { src: string; caption: string }[] = [
   { src: fl8,  caption: 'Поля забвения' },
   { src: fl9,  caption: 'Экспедиция' },
   { src: fl10, caption: 'Сакура дол' },
+  { src: fl11, caption: 'MONEY · СТАТУЯ' },
 ];
 
 const pillars = [
