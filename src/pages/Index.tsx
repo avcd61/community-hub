@@ -6,7 +6,7 @@ import InteractivePlaceholders from '@/components/InteractivePlaceholders';
 import AboutSection from '@/components/AboutSection';
 import ServerIdentity from '@/components/ServerIdentity';
 import Footer from '@/components/Footer';
-import CrtOverlay from '@/components/CrtOverlay';
+import CursorSpotlight from '@/components/CursorSpotlight';
 
 // Heavy / below-the-fold sections: code-split & stream in on demand.
 const MusicSection = lazy(() => import('@/components/MusicSection'));
@@ -49,7 +49,7 @@ const Index = () => {
 
       <Footer />
 
-      <CrtOverlay />
+      <CursorSpotlight />
     </div>
   );
 };

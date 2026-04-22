@@ -69,24 +69,43 @@ const HeroCarousel = () => {
       id="hero"
       className="relative pt-14 md:pt-16 border-b border-border overflow-hidden"
     >
-      {/* Ticker — thin marquee bar under the header */}
-      <div className="relative h-7 border-b border-border bg-card/70 overflow-hidden">
-        <div className="flex whitespace-nowrap animate-ticker will-change-transform">
-          {Array.from({ length: 2 }).map((_, dup) => (
-            <div
-              key={dup}
-              className="flex items-center gap-8 px-4 font-mono text-[11px] uppercase tracking-[0.25em] text-primary"
-            >
-              <span>◾ FSR-95 BROADCAST LIVE</span>
-              <span className="text-muted-foreground">// САМЫЕ ЗАВОЗНЫЕ 95 БРАТУХИ</span>
-              <span>◾ CH.95 / MHZ 1995.00</span>
-              <span className="text-muted-foreground">// АНДРЕЙ — ЛУЧШИЙ АДМИН</span>
-              <span>◾ DO NOT ADJUST YOUR SET</span>
-              <span className="text-muted-foreground">// ЗАВОЗЯМБА</span>
-              <span>◾ FSR-95 BROADCAST LIVE</span>
-              <span className="text-muted-foreground">// САМЫЕ ЗАВОЗНЫЕ 95 БРАТУХИ</span>
-            </div>
-          ))}
+      {/* Ticker — thin marquee bar under the header. Two opposing rows feel busier without being loud. */}
+      <div className="relative border-y border-border bg-card/70 overflow-hidden">
+        <div className="relative h-7 overflow-hidden">
+          <div className="flex whitespace-nowrap animate-ticker will-change-transform">
+            {Array.from({ length: 2 }).map((_, dup) => (
+              <div
+                key={dup}
+                className="flex items-center gap-8 px-4 font-mono text-[11px] uppercase tracking-[0.25em] text-foreground"
+              >
+                <span>◾ FSR-95 BROADCAST LIVE</span>
+                <span className="text-muted-foreground">// САМЫЕ ЗАВОЗНЫЕ 95 БРАТУХИ</span>
+                <span>◾ CH.95 / MHZ 1995.00</span>
+                <span className="text-muted-foreground">// АНДРЕЙ — ЛУЧШИЙ АДМИН</span>
+                <span>◾ DO NOT ADJUST YOUR SET</span>
+                <span className="text-muted-foreground">// ЗАВОЗЯМБА</span>
+                <span>◾ FSR-95 BROADCAST LIVE</span>
+                <span className="text-muted-foreground">// САМЫЕ ЗАВОЗНЫЕ 95 БРАТУХИ</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="relative h-7 overflow-hidden border-t border-border bg-foreground text-background">
+          <div className="flex whitespace-nowrap animate-ticker-reverse will-change-transform">
+            {Array.from({ length: 2 }).map((_, dup) => (
+              <div
+                key={dup}
+                className="flex items-center gap-8 px-4 font-mono text-[11px] uppercase tracking-[0.25em]"
+              >
+                <span>▮ NO COLOR // ALL SIGNAL</span>
+                <span className="opacity-70">// MONO EDITION v0.95</span>
+                <span>▮ ANALOG IS THE MESSAGE</span>
+                <span className="opacity-70">// BRISHA ▸ ANDREW ▸ БУЛЬМЕНЬ ▸ ДОКИЧ</span>
+                <span>▮ STAY ON CHANNEL 95</span>
+                <span className="opacity-70">// NO TINT — JUST INK</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -102,18 +121,39 @@ const HeroCarousel = () => {
         </div>
 
         <h1
-          className="font-display font-black uppercase leading-[0.88] tracking-[-0.02em] text-foreground"
+          className="font-display font-black uppercase leading-[0.88] tracking-[-0.02em] text-foreground overflow-hidden"
           style={{ fontSize: 'clamp(2.5rem, 8vw, 6.5rem)' }}
         >
-          ЗАВО<span className="text-primary">ЗЯМБА</span>{' '}
-          <span className="text-foreground/40">№</span>
-          <span className="text-foreground">95</span>
+          <span className="char-rise inline-block align-baseline" aria-hidden="true">
+            {'ЗАВО'.split('').map((c, i) => (
+              <span key={`a-${i}`} style={{ ['--i' as never]: i }}>{c}</span>
+            ))}
+          </span>
+          <span
+            className="char-rise inline-block align-baseline bg-foreground text-background px-1 md:px-2 ml-0.5 md:ml-1"
+            aria-hidden="true"
+          >
+            {'ЗЯМБА'.split('').map((c, i) => (
+              <span key={`b-${i}`} style={{ ['--i' as never]: 4 + i }}>{c}</span>
+            ))}
+          </span>
+          <span className="char-rise inline-block align-baseline ml-3 md:ml-5 text-foreground/40" aria-hidden="true">
+            <span style={{ ['--i' as never]: 9 }}>№</span>
+          </span>
+          <span className="char-rise inline-block align-baseline text-foreground glitch-x" aria-hidden="true">
+            <span style={{ ['--i' as never]: 10 }}>9</span>
+            <span style={{ ['--i' as never]: 11 }}>5</span>
+          </span>
+          <span className="sr-only">ЗАВОЗЯМБА №95</span>
         </h1>
 
-        <p className="mt-5 max-w-2xl text-foreground/75 text-base md:text-lg leading-relaxed">
+        <p
+          className="mt-5 max-w-2xl text-foreground/75 text-base md:text-lg leading-relaxed animate-fade-up"
+          style={{ animationDelay: '650ms' }}
+        >
           Ретрансляция криворожского андеграунда. Музыка, Minecraft, мемы и 95
           братух в прямом эфире. Ниже — все каналы,{' '}
-          <span className="text-primary">выбирай любой</span>.
+          <span className="bg-foreground text-background px-1">выбирай любой</span>.
         </p>
 
         {/* Channel guide — TV-guide table of all 4 destinations */}
@@ -132,14 +172,14 @@ const HeroCarousel = () => {
                   href={ch.buttonUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative grid grid-cols-[auto_auto_1fr_auto] md:grid-cols-[auto_auto_1fr_auto_auto] items-center gap-4 md:gap-6 p-4 md:p-5 hover:bg-primary/5 transition-colors"
+                  className="group relative grid grid-cols-[auto_auto_1fr_auto] md:grid-cols-[auto_auto_1fr_auto_auto] items-center gap-4 md:gap-6 p-4 md:p-5 transition-colors hover:bg-foreground hover:text-background focus-visible:bg-foreground focus-visible:text-background"
                   style={{
                     animation: 'fade-up 0.55s cubic-bezier(0.16,1,0.3,1) both',
                     animationDelay: `${80 + i * 70}ms`,
                   }}
                 >
                   {/* Channel code */}
-                  <div className="font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary w-12 md:w-16 shrink-0">
+                  <div className="font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] text-foreground w-12 md:w-16 shrink-0">
                     CH.{String(i + 1).padStart(2, '0')}
                   </div>
 
@@ -154,38 +194,39 @@ const HeroCarousel = () => {
                       height={160}
                       className="w-full h-full object-cover"
                     />
-                    <span className="absolute top-0.5 left-0.5 w-2 h-2 border-t-2 border-l-2 border-primary" />
-                    <span className="absolute top-0.5 right-0.5 w-2 h-2 border-t-2 border-r-2 border-primary" />
-                    <span className="absolute bottom-0.5 left-0.5 w-2 h-2 border-b-2 border-l-2 border-primary" />
-                    <span className="absolute bottom-0.5 right-0.5 w-2 h-2 border-b-2 border-r-2 border-primary" />
+                    <span className="absolute top-0.5 left-0.5 w-2 h-2 border-t-2 border-l-2 border-foreground" />
+                    <span className="absolute top-0.5 right-0.5 w-2 h-2 border-t-2 border-r-2 border-foreground" />
+                    <span className="absolute bottom-0.5 left-0.5 w-2 h-2 border-b-2 border-l-2 border-foreground" />
+                    <span className="absolute bottom-0.5 right-0.5 w-2 h-2 border-b-2 border-r-2 border-foreground" />
                   </div>
 
                   {/* Name / role / quote */}
                   <div className="min-w-0">
                     <div className="flex items-baseline gap-3 flex-wrap">
-                      <h2 className="font-display font-black uppercase leading-none text-foreground tracking-[-0.01em] text-lg md:text-2xl group-hover:text-primary transition-colors">
+                      <h2 className="font-display font-black uppercase leading-none tracking-[-0.01em] text-lg md:text-2xl transition-colors">
                         {ch.name}
                       </h2>
-                      <span className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                      <span className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background/70 group-focus-visible:text-background/70 transition-colors">
                         // {ch.role}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-foreground/70 text-xs md:text-sm leading-snug line-clamp-2 md:line-clamp-1">
+                    <p className="mt-1.5 text-foreground/70 text-xs md:text-sm leading-snug line-clamp-2 md:line-clamp-1 group-hover:text-background/80 group-focus-visible:text-background/80 transition-colors">
                       «{ch.quote}»
                     </p>
                   </div>
 
                   {/* CTA text (hidden on narrow, visible md+) */}
-                  <span className="hidden md:inline-block font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-primary transition-colors">
+                  <span className="hidden md:inline-block font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background group-focus-visible:text-background transition-colors">
                     {ch.buttonText}
                   </span>
 
                   {/* Arrow chip */}
                   <span
-                    className="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 border border-border text-foreground group-hover:border-primary group-hover:text-primary-foreground group-hover:bg-primary transition-colors"
+                    className="flex items-center justify-center w-10 h-10 md:w-11 md:h-11 border border-border text-foreground group-hover:bg-background group-hover:text-foreground group-hover:border-background group-focus-visible:bg-background group-focus-visible:text-foreground transition-all group-hover:-translate-x-0 group-hover:-translate-y-0 overflow-hidden relative"
                     aria-hidden="true"
                   >
-                    <ArrowUpRight className="w-4 h-4" />
+                    <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-3 group-hover:-translate-y-3" />
+                    <ArrowUpRight className="w-4 h-4 absolute -translate-x-4 translate-y-4 transition-transform duration-300 group-hover:translate-x-0 group-hover:translate-y-0" />
                   </span>
                 </a>
               </li>
@@ -207,8 +248,8 @@ const HeroCarousel = () => {
               ))}
             </div>
             <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-              CH.95 <span className="text-primary">//</span> 1995.00 MHz{' '}
-              <span className="text-primary caret" />
+              CH.95 <span className="text-foreground">//</span> 1995.00 MHz{' '}
+              <span className="text-foreground caret" />
             </div>
           </div>
         </div>
