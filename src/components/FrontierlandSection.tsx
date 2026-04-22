@@ -6,8 +6,31 @@ import { useReveal } from '@/hooks/use-reveal';
 import fl1 from '@/assets/FL1.webp';
 import fl2 from '@/assets/FL2.webp';
 import fl3 from '@/assets/FL3.webp';
+import fl4 from '@/assets/FL4.webp';
+import fl5 from '@/assets/FL5.webp';
+import fl6 from '@/assets/FL6.webp';
+import fl7 from '@/assets/FL7.webp';
+import fl8 from '@/assets/FL8.webp';
+import fl9 from '@/assets/FL9.webp';
+import fl10 from '@/assets/FL10.webp';
 
-const screenshots = [fl1, fl2, fl3];
+/*
+  In-game screenshots from Frontierland. Caption is a short Cyrillic
+  label shown in the HUD overlay so viewers can tell the scenes apart
+  without reading into the scene itself.
+*/
+const screenshots: { src: string; caption: string }[] = [
+  { src: fl1,  caption: 'База · КЛАН' },
+  { src: fl2,  caption: 'Аванпост' },
+  { src: fl3,  caption: 'Ночной рейд' },
+  { src: fl4,  caption: 'Бункер · СБОР' },
+  { src: fl5,  caption: 'Монастырь' },
+  { src: fl6,  caption: 'Галерея · WEEKND' },
+  { src: fl7,  caption: 'Зал императора' },
+  { src: fl8,  caption: 'Поля забвения' },
+  { src: fl9,  caption: 'Экспедиция' },
+  { src: fl10, caption: 'Сакура дол' },
+];
 
 const pillars = [
   { title: 'ВЫЖИВАНИЕ', text: 'Честный майн без читов: крафт, строительство, фермы.' },
@@ -181,11 +204,11 @@ const FrontierlandSection = () => {
           {/* Right — screenshot stack */}
           <div className="lg:col-span-7 order-1 lg:order-2">
             <div className="relative aspect-[16/10] overflow-hidden" style={{ border: '1px solid hsl(var(--violet-500) / 0.5)' }}>
-              {screenshots.map((src, i) => (
+              {screenshots.map(({ src, caption }, i) => (
                 <img
                   key={src}
                   src={src}
-                  alt={`Frontierland ${i + 1}`}
+                  alt={`Frontierland · ${caption}`}
                   loading="lazy"
                   decoding="async"
                   className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
@@ -203,6 +226,12 @@ const FrontierlandSection = () => {
               <div className="absolute top-4 left-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-300))' }}>
                 <span className="pulse-dot" style={{ background: 'hsl(var(--violet-400))', boxShadow: '0 0 12px hsl(var(--violet-400) / 0.6)' }} />
                 <span>Live feed · {String(active + 1).padStart(2, '0')}/{String(screenshots.length).padStart(2, '0')}</span>
+              </div>
+              <div
+                className="absolute bottom-4 left-4 font-mono text-[11px] uppercase tracking-[0.28em] max-w-[70%] truncate"
+                style={{ color: 'hsl(var(--violet-50))' }}
+              >
+                {screenshots[active]?.caption}
               </div>
               <div className="absolute bottom-4 right-4 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-50) / 0.8)' }}>
                 FRONTIERLAND · MC_1.20.1
