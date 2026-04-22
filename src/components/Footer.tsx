@@ -54,13 +54,23 @@ const KineticWordmark = () => {
             <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.82" />
           </linearGradient>
 
-          {/* Vertical bright band used by the scan animation. */}
+          {/*
+            Vertical bright band used by the scan animation. Previously
+            this used the `foreground` bone-white colour, which blended
+            with the glyph fill and read as basically invisible. Now it
+            uses the electric violet accent already defined on the site
+            (same family as Frontierland) so the band pops against the
+            fill with a clear colour shift. The bright core is wider
+            (38→62%) for a more readable sweep.
+          */}
           <linearGradient id="footer-scan-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="hsl(var(--foreground))" stopOpacity="0" />
-            <stop offset="45%"  stopColor="hsl(var(--foreground))" stopOpacity="0" />
-            <stop offset="50%"  stopColor="hsl(var(--foreground))" stopOpacity="0.95" />
-            <stop offset="55%"  stopColor="hsl(var(--foreground))" stopOpacity="0" />
-            <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0" />
+            <stop offset="0%"   stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+            <stop offset="38%"  stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+            <stop offset="47%"  stopColor="hsl(var(--violet-300))" stopOpacity="0.85" />
+            <stop offset="50%"  stopColor="hsl(var(--violet-50))"  stopOpacity="1" />
+            <stop offset="53%"  stopColor="hsl(var(--violet-300))" stopOpacity="0.85" />
+            <stop offset="62%"  stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+            <stop offset="100%" stopColor="hsl(var(--violet-400))" stopOpacity="0" />
           </linearGradient>
 
           {/* Clip path shaped as the "95" glyphs — keeps the scan band
