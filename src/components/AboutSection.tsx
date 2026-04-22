@@ -74,7 +74,7 @@ const AboutSection = () => {
 
         <div ref={ref} className="reveal">
           <h2 className="display-xl text-foreground mb-4">
-            О&nbsp;НАС<span className="text-primary">.</span>
+            О&nbsp;НАС<span className="inline-block w-[0.18em] h-[0.18em] bg-foreground align-baseline ml-1" aria-hidden="true" />
           </h2>
           <p className="max-w-2xl text-foreground/80 text-base md:text-lg mb-12">
             Самые завозные и активные братухи которые сделали большой вклад в
@@ -86,15 +86,22 @@ const AboutSection = () => {
              the big numerals. */}
           <div className="mb-16 border border-border bg-border">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
-              {stats.map((s) => (
+              {stats.map((s, i) => (
                 <div
                   key={s.label}
-                  className="bg-card px-5 py-6 md:py-8 overflow-hidden"
+                  className="group relative bg-card px-5 py-6 md:py-8 overflow-hidden transition-colors duration-200 hover:bg-foreground hover:text-background"
+                  style={{
+                    animation: 'fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both',
+                    animationDelay: `${120 + i * 80}ms`,
+                  }}
                 >
-                  <div className="font-display font-black uppercase leading-none text-foreground whitespace-nowrap tracking-[-0.02em]" style={{ fontSize: 'clamp(1.75rem, 4vw, 3.25rem)' }}>
+                  <div className="absolute top-2 right-3 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background/60">
+                    #{String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div className="font-display font-black uppercase leading-none whitespace-nowrap tracking-[-0.02em]" style={{ fontSize: 'clamp(1.75rem, 4vw, 3.25rem)' }}>
                     {s.value}
                   </div>
-                  <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                  <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background/70">
                     {s.label}
                   </div>
                 </div>
@@ -102,12 +109,12 @@ const AboutSection = () => {
             </div>
           </div>
 
-          {/* Roster grid */}
+          {/* Roster grid — each dossier card fully inverts on hover. */}
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
             {memberCards.map((m, i) => (
               <li
                 key={m.name}
-                className="block p-5 md:p-6"
+                className="group relative border border-border bg-card p-5 md:p-6 transition-colors duration-200 hover:bg-foreground hover:text-background hover:border-foreground"
                 style={{
                   animation: 'fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both',
                   animationDelay: `${i * 60}ms`,
@@ -122,22 +129,24 @@ const AboutSection = () => {
                       decoding="async"
                       width={200}
                       height={200}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover grayscale contrast-[1.05] transition-all duration-300 group-hover:grayscale-0 group-hover:scale-[1.04]"
                     />
-                    <span className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-primary" />
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-primary" />
-                    <span className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-primary" />
-                    <span className="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-primary" />
+                    <span className="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-foreground" />
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-foreground" />
+                    <span className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-foreground" />
+                    <span className="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary mb-1">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground group-hover:text-background/60 mb-1">
                       № {String(i + 1).padStart(2, '0')}
                     </div>
-                    <h3 className="font-display font-black uppercase text-lg md:text-xl leading-none text-foreground mb-2">
+                    <h3 className="font-display font-black uppercase text-lg md:text-xl leading-none mb-2">
                       {m.name}
                     </h3>
-                    <div className="chip chip-primary mb-3">{m.role}</div>
-                    <p className="text-foreground/70 text-sm leading-relaxed">
+                    <div className="chip mb-3 group-hover:border-background group-hover:text-background">
+                      {m.role}
+                    </div>
+                    <p className="text-foreground/70 group-hover:text-background/80 text-sm leading-relaxed transition-colors">
                       {m.description}
                     </p>
                   </div>

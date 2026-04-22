@@ -46,18 +46,25 @@ const ServerIdentity = () => {
               <span className="absolute -bottom-px -right-px w-3 h-3 border-b-2 border-r-2 border-primary" />
             </div>
             <div
-              className="font-display font-black uppercase leading-[0.8] text-primary select-none"
+              className="relative font-display font-black uppercase leading-[0.8] select-none"
               style={{ fontSize: 'clamp(6rem, 22vw, 18rem)', letterSpacing: '-0.05em' }}
               aria-hidden="true"
             >
-              95
+              {/* Ghost copy drawn as outline behind the solid glyph for depth. */}
+              <span
+                className="absolute inset-0 text-transparent"
+                style={{ WebkitTextStroke: '1px hsl(var(--foreground) / 0.35)' }}
+              >
+                95
+              </span>
+              <span className="relative text-foreground glitch-x inline-block">95</span>
             </div>
           </div>
 
           {/* Manifesto */}
           <div>
             <h2 className="display-lg text-foreground mb-5">
-              FSR<span className="text-primary">-</span>95
+              FSR<span className="bg-foreground text-background px-1">-</span>95
             </h2>
             <p className="text-foreground/80 text-lg md:text-xl leading-relaxed max-w-xl">
               Иҗат туа торган һәм нык дуслык бәйләнешләре корыла торган урын. Без гади генә

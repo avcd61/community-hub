@@ -35,12 +35,12 @@ const socials = [
 const Footer = () => {
   return (
     <footer className="relative border-t border-border">
-      {/* Scanline separator */}
+      {/* Hatched separator — fine diagonal ink on paper. */}
       <div
-        className="h-1 w-full"
+        className="h-2 w-full"
         style={{
           background:
-            'repeating-linear-gradient(90deg, hsl(var(--primary)) 0 6px, transparent 6px 12px)',
+            'repeating-linear-gradient(135deg, hsl(var(--foreground)) 0 2px, transparent 2px 8px)',
         }}
         aria-hidden="true"
       />
@@ -78,7 +78,7 @@ const Footer = () => {
                 <a
                   href="#"
                   aria-label={s.label}
-                  className="flex items-center justify-center w-10 h-10 border border-border text-foreground hover:text-primary hover:border-primary transition-colors"
+                  className="flex items-center justify-center w-10 h-10 border border-border text-foreground hover:bg-foreground hover:text-background hover:border-foreground transition-colors"
                 >
                   {s.icon}
                 </a>
