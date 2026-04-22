@@ -430,22 +430,31 @@ const MusicSection = () => {
     a.muted = muted;
   }, [volume, muted]);
 
-  // Load track when album / index changes.
+  /*
+    Load a new track into the shared audio element ONLY when the
+    album+track selection actually changes. Comparing against
+    `audio.src` is unreliable because the browser serialises it to an
+    absolute URL, so toggling play/pause used to look like a "new
+    track" and reload the element — which reset currentTime to 0.
+  */
+  const loadedTrackRef = useRef<string | null>(null);
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !selectedAlbum) return;
     const track = selectedAlbum.tracks[currentTrack];
     if (!track?.file) return;
-    if (audio.src !== track.file) {
+    const key = `${selectedAlbum.id}:${currentTrack}:${track.file}`;
+    if (loadedTrackRef.current !== key) {
+      loadedTrackRef.current = key;
       audio.src = track.file;
       audio.load();
       setCurrentTime(0);
       setDuration(0);
       setAudioReady(false);
-    }
-    if (isPlaying) {
-      ensureAudioGraph();
-      audio.play().catch(() => setIsPlaying(false));
+      if (isPlaying) {
+        ensureAudioGraph();
+        audio.play().catch(() => setIsPlaying(false));
+      }
     }
   }, [selectedAlbum, currentTrack, isPlaying, ensureAudioGraph]);
 
@@ -537,6 +546,7 @@ const MusicSection = () => {
       a.pause();
       a.removeAttribute('src');
     }
+    loadedTrackRef.current = null;
     setSelectedAlbum(null);
     setModalOpen(false);
     setIsPlaying(false);
