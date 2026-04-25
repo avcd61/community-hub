@@ -35,13 +35,13 @@ const screenshots: { src: string; caption: string }[] = [
 ];
 
 const pillars = [
-  { title: 'ВЫЖИВАНИЕ', text: 'Честный майн без читов: крафт, строительство, фермы.' },
-  { title: 'PVP АРЕНА', text: 'Ежедневные битвы за статус лучшего бойца 95-го.' },
+  { title: 'ВЫЖИВАНИЕ', text: 'Честный майн без читов: крафт, строительство, фермы!' },
+  { title: 'СТАБИЛЬ', text: 'Ежедневные битвы за статус лучшего бойца 95-го.' },
   { title: 'СОБЫТИЯ', text: 'Конкурсы, рейды, командные события каждую неделю.' },
   { title: 'ГИЛЬДИИ', text: 'Собирай команду, стройся, качай прокачку, доминируй.' },
 ];
 
-const SERVER_IP = 'play.fsr-95.ru';
+const SERVER_IP = 'n40.joinserver.xyz:25849';
 
 /**
  * Frontierland. Only section with colour — black base + electric violet
@@ -86,15 +86,15 @@ const FrontierlandSection = () => {
         >
           {Array.from({ length: 2 }).map((_, dup) => (
             <div key={dup} className="flex shrink-0 items-center gap-10">
-              <span>FRONTIERLAND · MINECRAFT 1.20.1</span>
+              <span>FRONTIERLAND</span>
               <span>·</span>
-              <span>CH.IV / PURPLE SIGNAL</span>
+              <span>Бля хочу Крабсбургер</span>
               <span>·</span>
               <span>IP {SERVER_IP}</span>
               <span>·</span>
-              <span>24/7 · NO GRIEF · NO CHEATS</span>
+              <span>Хорошие сборки</span>
               <span>·</span>
-              <span>{'<'} JOIN THE FRONTIER {'>'}</span>
+              <span>{'<'} Заходи сука {'>'}</span>
               <span>·</span>
             </div>
           ))}
@@ -109,7 +109,7 @@ const FrontierlandSection = () => {
           <span>№ V</span>
           <span className="opacity-50">/</span>
           <span>FRONTIERLAND</span>
-          <span className="ml-auto opacity-70 hidden sm:inline">[MC_SERVER]</span>
+          <span className="ml-auto opacity-70 hidden sm:inline">[MINISRUFT_SERVER]</span>
         </div>
 
         <div ref={ref} className="reveal">
@@ -117,7 +117,7 @@ const FrontierlandSection = () => {
           <div className="mb-10 md:mb-14">
             <div className="violet-badge mb-5">
               <span aria-hidden="true">◆</span>
-              Minecraft · ФСР-95
+              Frontier · Land
             </div>
             <h2
               className="display-xl text-balance"
@@ -139,9 +139,7 @@ const FrontierlandSection = () => {
               className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl"
               style={{ color: 'hsl(var(--violet-50) / 0.85)' }}
             >
-              Частный MC-сервер ФСР-95. Твой шанс увидеть, как 95 братух строят
-              целую цивилизацию на одном поле — от скромной землянки до города
-              с рейдами и ареной.
+              Майнкрафт сервер Андрея. Твой шанс увидеть, как люди срутся из-за моста и убитого армадила.
             </p>
           </div>
         </div>
@@ -236,7 +234,7 @@ const FrontierlandSection = () => {
                 {screenshots[active]?.caption}
               </div>
               <div className="absolute bottom-4 right-4 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-50) / 0.8)' }}>
-                FRONTIERLAND · MC_1.20.1
+                FRONTIERLAND
               </div>
 
               {/* Controls */}
