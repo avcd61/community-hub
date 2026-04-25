@@ -13,6 +13,8 @@ import {
   ArrowUpRight,
   Minus,
   Maximize2,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -513,6 +515,12 @@ const MusicSection = () => {
       } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
         togglePlay();
+      } else if (e.key === 'ArrowRight' && e.altKey) {
+        e.preventDefault();
+        nextAlbum();
+      } else if (e.key === 'ArrowLeft' && e.altKey) {
+        e.preventDefault();
+        prevAlbum();
       } else if (e.key === 'ArrowRight' && e.shiftKey) {
         nextTrack();
       } else if (e.key === 'ArrowLeft' && e.shiftKey) {
@@ -585,6 +593,18 @@ const MusicSection = () => {
     if (!selectedAlbum) return;
     setCurrentTrack((i) => (i > 0 ? i - 1 : selectedAlbum.tracks.length - 1));
   };
+  const switchAlbum = (delta: -1 | 1) => {
+    if (!selectedAlbum) return;
+    const idx = albums.findIndex((a) => a.id === selectedAlbum.id);
+    if (idx < 0) return;
+    const next = albums[(idx + delta + albums.length) % albums.length];
+    setSelectedAlbum(next);
+    setCurrentTrack(0);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+  const nextAlbum = () => switchAlbum(1);
+  const prevAlbum = () => switchAlbum(-1);
   const seek = (pct: number) => {
     const a = audioRef.current;
     if (!a || !a.duration) return;
@@ -782,14 +802,38 @@ const MusicSection = () => {
 
               {/* meta */}
               <div className="p-5 border-b border-border">
-                <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                  LP.0{selectedAlbum.id} · {selectedAlbum.artist} · {selectedAlbum.tracks.length} TRK
-                </div>
-                <div className="mt-1 font-display uppercase text-2xl leading-none tracking-[-0.02em]">
-                  {selectedAlbum.title}
-                </div>
-                <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-foreground truncate">
-                  {nowPlaying?.title ?? '—'}
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={prevAlbum}
+                    disabled={albums.length < 2}
+                    className="w-9 h-9 shrink-0 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-foreground"
+                    aria-label="Предыдущий альбом"
+                    title="Предыдущий альбом (Alt+←)"
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                      LP.0{selectedAlbum.id} · {selectedAlbum.artist} · {selectedAlbum.tracks.length} TRK
+                    </div>
+                    <div className="mt-1 font-display uppercase text-2xl leading-none tracking-[-0.02em] truncate">
+                      {selectedAlbum.title}
+                    </div>
+                    <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.25em] text-foreground truncate">
+                      {nowPlaying?.title ?? '—'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={nextAlbum}
+                    disabled={albums.length < 2}
+                    className="w-9 h-9 shrink-0 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-foreground"
+                    aria-label="Следующий альбом"
+                    title="Следующий альбом (Alt+→)"
+                  >
+                    <ChevronsRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -1081,6 +1125,16 @@ const MusicSection = () => {
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
+                onClick={prevAlbum}
+                disabled={albums.length < 2}
+                className="w-7 h-9 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-foreground"
+                aria-label="Предыдущий альбом"
+                title="Предыдущий альбом (Alt+←)"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={prevTrack}
                 className="w-9 h-9 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background"
                 aria-label="Предыдущий трек"
@@ -1102,6 +1156,16 @@ const MusicSection = () => {
                 aria-label="Следующий трек"
               >
                 <SkipForward className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={nextAlbum}
+                disabled={albums.length < 2}
+                className="w-7 h-9 border border-border flex items-center justify-center transition-colors duration-200 hover:bg-foreground hover:text-background disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-foreground"
+                aria-label="Следующий альбом"
+                title="Следующий альбом (Alt+→)"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
