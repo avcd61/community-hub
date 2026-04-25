@@ -193,12 +193,6 @@ const HeroCarousel = () => {
               <span className="inline-block bg-foreground text-background px-[0.1em]">
                 <CharRise text="ЗЯМБА" startDelay={120} stepMs={40} />
               </span>
-              <span
-                className="font-serif-italic not-italic-tracking ml-4 md:ml-6 align-middle text-foreground/70"
-                style={{ fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontStyle: 'italic' }}
-              >
-                №&nbsp;95
-              </span>
             </span>
           </h1>
 
