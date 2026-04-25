@@ -85,20 +85,19 @@ const AboutSection = () => {
         <div className="chapter-meta mb-8">
           <span>№ II</span>
           <span className="opacity-50">/</span>
-          <span>РОСТЕР</span>
+          <span>О НАС</span>
           <span className="ml-auto opacity-50 hidden sm:inline">[05_ON_AIR]</span>
         </div>
 
         <div ref={ref} className="reveal">
           <h2 className="display-xl mb-6 text-balance">
-            КТО{' '}
+            О{' '}
             <span
               className="font-serif-italic text-foreground/80 not-italic-tracking"
               style={{ fontStyle: 'italic' }}
             >
-              сидит
-            </span>{' '}
-            НА ЭТОМ КАНАЛЕ
+              нас
+            </span>
           </h2>
           <p className="max-w-xl text-foreground/70 text-base md:text-lg mb-16 text-balance">
             Самые завозные и активные братухи, которые вкладываются в развитие
