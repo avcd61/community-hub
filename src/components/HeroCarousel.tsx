@@ -24,14 +24,14 @@ const channels = [
     role: 'Фильмы уровня Оскара',
     quote: 'ФСР-95 бросает вызов мистеру Максу',
     url: 'https://www.youtube.com/@ФСР95',
-    cta: 'Смотреть',
+    cta: 'Подписаться',
   },
   {
     label: 'Steam',
     role: 'Кладбище с Докичем',
     quote: 'Актива нет — есть докич и легенда',
     url: 'https://steamcommunity.com/groups/FRSOOfficial',
-    cta: 'Навестить',
+    cta: 'Помянуть',
   },
   {
     label: 'Telegram',
@@ -105,15 +105,15 @@ const HeroCarousel = () => {
     >
       {/* Top marquee */}
       <Marquee duration={42}>
-        <span>FSR-95 BROADCAST LIVE</span>
+        <span>Labas</span>
         <span className="dot-sep" />
-        <span className="opacity-60">ЗАВОЗЯМБА · EDITION II</span>
+        <span className="opacity-60">BoneDust + Izumm = Sex</span>
         <span className="dot-sep" />
-        <span>НИ ОДНОГО ДНЯ БЕЗ ЗАВОЗА</span>
+        <span>Админ всегда долбоёб</span>
         <span className="dot-sep" />
-        <span className="opacity-60">АНДРЕЙ — ЛУЧШИЙ АДМИН</span>
+        <span className="opacity-60">Кладе спиздил сладкий подарок</span>
         <span className="dot-sep" />
-        <span>95,000+ БРАТУХ</span>
+        <span>ПтичкаБурмалдичка</span>
         <span className="dot-sep" />
       </Marquee>
 
@@ -177,10 +177,10 @@ const HeroCarousel = () => {
           {/* Eyebrow */}
           <div className="chapter-meta mb-8 md:mb-12">
             <span className="pulse-dot" />
-            <span className="text-foreground">CH.95 TRANSMISSION</span>
-            <span className="hidden md:inline opacity-60">/ EST. 2024</span>
+            <span className="text-foreground">Frontier Squad Rebith</span>
+            <span className="hidden md:inline opacity-60">/ Born in 2025</span>
             <span className="ml-auto opacity-60 hidden sm:inline">
-              <span className="font-serif-italic text-foreground/80 text-[15px] not-italic-tracking">Edition II</span>
+              <span className="font-serif-italic text-foreground/80 text-[15px] not-italic-tracking">95</span>
             </span>
           </div>
 
@@ -204,8 +204,7 @@ const HeroCarousel = () => {
 
           {/* Sub-copy */}
           <p className="mt-8 max-w-2xl text-base md:text-lg text-foreground/75 leading-relaxed text-balance">
-            Клуб на 95,000+ братух. Завозы, альбомы, Frontierland MC, ежедневный
-            контент. Никаких полутонов — только ч/б и сигнал.
+            Апгрейд сайта и он теперь красный культурно не получится.
           </p>
 
           {/* CTA row */}
@@ -237,7 +236,7 @@ const HeroCarousel = () => {
                 />
               ))}
               <span>{']'}</span>
-              <span>SIGNAL STABLE</span>
+              <span>Zavoz STABLE</span>
             </div>
           </div>
         </div>
@@ -246,7 +245,7 @@ const HeroCarousel = () => {
         <div className="relative z-10 section-container pb-16 md:pb-24">
           <div className="chapter-meta mb-4">
             <span>&gt;</span>
-            <span>ГАЙД КАНАЛОВ / 04 ИСТОЧНИКА СИГНАЛА</span>
+            <span>Наши соц. сети / места прибывания</span>
           </div>
           <ul className="border-y border-border">
             {channels.map((ch, i) => (
