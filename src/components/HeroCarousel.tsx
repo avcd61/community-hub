@@ -13,7 +13,7 @@ import doghAudio from '@/assets/Dogh.mp4';
 
 const channels = [
   {
-    label: 'Дискорд',
+    label: 'Discord',
     role: 'Обитель завозов',
     quote: 'Пиздецки смешные мемчики каждый день',
     url: 'https://discord.com/invite/PNnSKWNhYE',
