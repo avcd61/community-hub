@@ -5,7 +5,7 @@ import logo from '@/assets/logo.webp';
 
 const navLinks = [
   { label: 'Главная', href: '#hero', index: 'I' },
-  { label: 'Ростер', href: '#about', index: 'II' },
+  { label: 'О нас', href: '#about', index: 'II' },
   { label: 'Альбомы', href: '#music', index: 'III' },
   { label: 'Frontierland', href: '#frontierland', index: 'IV' },
   { label: 'Меллстрой', href: '#reel', index: 'V' },
@@ -81,11 +81,11 @@ const Header = () => {
           <div className="flex items-center gap-3">
             <span className="pulse-dot" />
             <span className="text-foreground">FSR-95</span>
-            <span className="hidden sm:inline">/ EDITION II</span>
+            <span className="hidden sm:inline">/ EDITION IV</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline">CH.95</span>
-            <span className="hidden md:inline">· MHZ 1995.00</span>
+            <span className="hidden md:inline">·  MHZ 1995.00</span>
             <span className="text-foreground/80">{clock}</span>
           </div>
         </div>
