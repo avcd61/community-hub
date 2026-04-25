@@ -60,7 +60,7 @@ const episodes: Episode[] = [
   },
   {
     n: '03.5',
-    title: 'Interlude · Bonus',
+    title: 'Румынская Авантюра',
     synopsis: 'Спецвыпуск. Бонусная глава между третьей и четвёртой сериями.',
     ytId: 'mHFl15buXe0',
     url: 'https://www.youtube.com/watch?v=mHFl15buXe0&t=1s',
