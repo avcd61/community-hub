@@ -26,6 +26,7 @@ import album4 from '@/assets/1.webp';
 import album5Mp4 from '@/assets/Echo95.mp4';
 import album5Webm from '@/assets/Echo95.webm';
 import album5Poster from '@/assets/Echo95.webp';
+import album6 from '@/assets/16years.webp';
 
 type Track = { title: string; file?: string };
 
@@ -177,6 +178,20 @@ const albums: AlbumType[] = [
     '/music/',
     'Album5',
     { mp4: album5Mp4, webm: album5Webm }
+  ),
+  createAlbum(
+    6,
+    '16 лет',
+    '95legend59',
+    'Юбилейный завоз: три новых трека от 95legend59 — про сторублёвую Кропоткинскую, бабулю с лазерами и двухстволку Булимпэниса.',
+    album6,
+    [
+      { title: 'Сто рублей Кропоткино', file: '/music/Album6/Сто рублей Кропоткино.mp3' },
+      { title: 'Бабуля Коко Рифф', file: '/music/Album6/Бабуля Коко Рифф.mp3' },
+      { title: 'Булимпенис Двухстволка', file: '/music/Album6/Булимпенис Двухстволка.mp3' },
+    ],
+    '/music/',
+    'Album6'
   ),
 ];
 
