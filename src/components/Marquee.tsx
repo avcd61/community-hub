@@ -11,8 +11,10 @@ interface MarqueeProps {
 }
 
 /**
- * Horizontal marquee. Renders its children twice end-to-end and translates
- * the track by -50% over `duration`. Pause-on-hover is built in.
+ * Horizontal marquee. Renders its children four times end-to-end and
+ * translates the track by -50% over `duration` so that on any viewport
+ * width there are always enough duplicates to fill the screen — no
+ * blank seam at the loop boundary. Pause-on-hover is built in.
  */
 const Marquee = ({
   children,
@@ -27,21 +29,19 @@ const Marquee = ({
       ? 'bg-transparent text-foreground'
       : 'bg-foreground text-background';
 
+  const copyCls =
+    'flex shrink-0 items-center gap-8 pr-8 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.28em]';
+
   return (
     <div className={`relative overflow-hidden ${toneCls} ${className}`}>
       <div
         className={reverse ? 'marquee-track marquee-reverse' : 'marquee-track'}
         style={{ animationDuration: `${d}s` }}
       >
-        <div className="flex shrink-0 items-center gap-8 pr-8 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.28em]">
-          {children}
-        </div>
-        <div
-          aria-hidden="true"
-          className="flex shrink-0 items-center gap-8 pr-8 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.28em]"
-        >
-          {children}
-        </div>
+        <div className={copyCls}>{children}</div>
+        <div className={copyCls} aria-hidden="true">{children}</div>
+        <div className={copyCls} aria-hidden="true">{children}</div>
+        <div className={copyCls} aria-hidden="true">{children}</div>
       </div>
     </div>
   );
