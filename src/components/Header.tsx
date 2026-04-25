@@ -81,11 +81,10 @@ const Header = () => {
           <div className="flex items-center gap-3">
             <span className="pulse-dot" />
             <span className="text-foreground">FSR-95</span>
-            <span className="hidden sm:inline">/ EDITION IV</span>
+            <span className="hidden sm:inline">/ Version IV</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline">CH.95</span>
-            <span className="hidden md:inline">·  MHZ 1995.00</span>
+            <span className="hidden sm:inline">95 Братухи зовут...</span>
             <span className="text-foreground/80">{clock}</span>
           </div>
         </div>
