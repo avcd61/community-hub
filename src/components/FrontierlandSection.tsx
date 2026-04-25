@@ -84,8 +84,8 @@ const FrontierlandSection = () => {
           className="marquee-track flex items-center gap-10 h-full pr-10 font-mono text-[11px] uppercase tracking-[0.3em]"
           style={{ animationDuration: '36s', color: 'hsl(var(--violet-300))' }}
         >
-          {Array.from({ length: 2 }).map((_, dup) => (
-            <div key={dup} className="flex shrink-0 items-center gap-10">
+          {Array.from({ length: 4 }).map((_, dup) => (
+            <div key={dup} className="flex shrink-0 items-center gap-10" aria-hidden={dup > 0}>
               <span>FRONTIERLAND</span>
               <span>·</span>
               <span>Бля хочу Крабсбургер</span>

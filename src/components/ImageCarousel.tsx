@@ -163,15 +163,19 @@ const ImageCarousel = () => {
           className="marquee-track flex items-center gap-10 h-full pr-10 font-mono text-[11px] uppercase tracking-[0.3em]"
           style={{ animationDuration: '38s', color: GOLD }}
         >
-          {Array.from({ length: 2 }).map((_, dup) => (
-            <div key={dup} className="flex shrink-0 items-center gap-10">
+          {Array.from({ length: 4 }).map((_, dup) => (
+            <div key={dup} className="flex shrink-0 items-center gap-10" aria-hidden={dup > 0}>
+              <span>Меллстрой · Настоящий</span>
+              <span>·</span>
+              <span>Кто такой Пекарь?</span>
+              <span>·</span>
               <span>МЕСТЬ МЕЛЛСТРОЯ · СЕРИАЛ ФСР-95</span>
               <span>·</span>
-              <span>7 СЕРИЙ · ВКЛЮЧАЯ BONUS-INTERLUDE</span>
+              <span>Кто озвучил херобрина</span>
               <span>·</span>
-              <span>ЗОЛОТАЯ ЛИХОРАДКА · EDITION II</span>
+              <span>R.I.P · Макака</span>
               <span>·</span>
-              <span>{'<'} WATCH ON YOUTUBE {'>'}</span>
+              <span>{'<'} ПОДПИШИСЬ НА КАНАЛ! {'>'}</span>
               <span>·</span>
             </div>
           ))}
