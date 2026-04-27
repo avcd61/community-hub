@@ -1,6 +1,8 @@
-import { ArrowUpRight, ArrowUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowUpRight, ArrowUp, X } from 'lucide-react';
 
 import Marquee from '@/components/Marquee';
+import footerEggGif from '@/assets/footer-egg.gif';
 
 const socials = [
   { label: 'Discord', url: 'https://discord.com/invite/PNnSKWNhYE' },
@@ -173,6 +175,16 @@ const KineticWordmark = () => {
 
 const Footer = () => {
   const toTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const [eggOpen, setEggOpen] = useState(false);
+
+  useEffect(() => {
+    if (!eggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [eggOpen]);
 
   return (
     <footer className="relative section-shell">
@@ -225,7 +237,13 @@ const Footer = () => {
 
         <div className="mt-6 flex items-center justify-between flex-wrap gap-4 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
           <div className="flex items-center gap-3">
-            <span>© 2024–2026 FSR-95</span>
+            <button
+              type="button"
+              onClick={() => setEggOpen(true)}
+              className="bg-transparent border-0 p-0 m-0 text-inherit font-inherit tracking-inherit cursor-pointer hover:text-foreground transition-colors"
+            >
+              © 2025–2026 FSR-95
+            </button>
             <span className="opacity-50">·</span>
             <span>ZЫBRO / ОМБ / 95 000+</span>
           </div>
@@ -240,6 +258,56 @@ const Footer = () => {
           </button>
         </div>
       </div>
+
+      {eggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setEggOpen(false)}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative w-[min(94vw,640px)] max-h-[88vh] overflow-y-auto bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 09
+              </span>
+              <button
+                type="button"
+                onClick={() => setEggOpen(false)}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="px-6 py-6 text-foreground/90 text-[15px] md:text-base leading-relaxed normal-case tracking-normal" style={{ fontFamily: 'inherit' }}>
+              <p>
+                Как же быстро летит время! Вроде только начало 25-го года — и тут хуяк, уже весна 26-го. Сколько же событий за эти полтора года произошло…
+              </p>
+              <p className="mt-3">
+                Честно говоря, я немного горд за то, что сервер, созданный по рофлу, стал чем-то большим — и за то, что я принял в этом непосредственное участие.
+              </p>
+              <p className="mt-3">
+                Надеюсь, ты нашёл все секреты (всего их 6). В принципе, вот и всё — точно всё. В консоль можно и не лезть — там контента для фанатов нет. На этом я прощаюсь и иду спать.
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex justify-center">
+              <img
+                src={footerEggGif}
+                alt=""
+                className="block max-w-full h-auto"
+                style={{ imageRendering: 'pixelated', maxHeight: 280 }}
+                draggable={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };
