@@ -29,7 +29,7 @@ const screenshots: { src: string; caption: string }[] = [
   { src: fl5,  caption: 'Монастырь' },
   { src: fl6,  caption: 'Галерея · WEEKND' },
   { src: fl7,  caption: 'Зал императора' },
-  { src: fl8,  caption: 'Поля забвения' },
+  { src: fl8,  caption: 'Выбор без выбора' },
   { src: fl9,  caption: 'Экспедиция' },
   { src: fl10, caption: 'Сакура дол' },
   { src: fl11, caption: 'MONEY · СТАТУЯ' },
