@@ -1,149 +1,350 @@
-import { useState, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Copy, Check, X } from 'lucide-react';
 
-import minecraft1 from '@/assets/FL1.png';
-import minecraft2 from '@/assets/FL2.png';
-import minecraft3 from '@/assets/FL3.png';
+import { useReveal } from '@/hooks/use-reveal';
 
-const screenshots = [minecraft1, minecraft2, minecraft3];
+import fl1 from '@/assets/FL1.webp';
+import fl2 from '@/assets/FL2.webp';
+import fl3 from '@/assets/FL3.webp';
+import fl4 from '@/assets/FL4.webp';
+import fl5 from '@/assets/FL5.webp';
+import fl6 from '@/assets/FL6.webp';
+import fl7 from '@/assets/FL7.webp';
+import fl8 from '@/assets/FL8.webp';
+import fl9 from '@/assets/FL9.webp';
+import fl10 from '@/assets/FL10.webp';
+import fl11 from '@/assets/FL11.webp';
+import frontierlandEggImg from '@/assets/frontierland-egg.png';
 
+/*
+  In-game screenshots from Frontierland. Caption is a short Cyrillic
+  label shown in the HUD overlay so viewers can tell the scenes apart
+  without reading into the scene itself.
+*/
+const screenshots: { src: string; caption: string }[] = [
+  { src: fl1,  caption: 'База · КЛАН' },
+  { src: fl2,  caption: 'Аванпост' },
+  { src: fl3,  caption: 'Ночной рейд' },
+  { src: fl4,  caption: 'Бункер · СБОР' },
+  { src: fl5,  caption: 'Монастырь' },
+  { src: fl6,  caption: 'Галерея · WEEKND' },
+  { src: fl7,  caption: 'Зал императора' },
+  { src: fl8,  caption: 'Выбор без выбора' },
+  { src: fl9,  caption: 'Экспедиция' },
+  { src: fl10, caption: 'Сакура дол' },
+  { src: fl11, caption: 'MONEY · СТАТУЯ' },
+];
+
+const pillars = [
+  { title: 'ВЫЖИВАНИЕ', text: 'Честный майн без читов: крафт, строительство, фермы!' },
+  { title: 'PVP', text: 'Ежедневные битвы за статус лучшего бойца 95-го.' },
+  { title: 'СОБЫТИЯ', text: 'Конкурсы, рейды, командные события каждую неделю.' },
+  { title: 'ГИЛЬДИИ', text: 'Собирай команду, стройся, качай прокачку, доминируй.' },
+];
+
+const SERVER_IP = 'n40.joinserver.xyz:25849';
+
+/**
+ * Frontierland. Only section with colour — black base + electric violet
+ * accents. Uses its own button style and halftone purple background.
+ */
 const FrontierlandSection = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const ref = useReveal<HTMLDivElement>();
+  const [active, setActive] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | null>(null);
+  const [eggOpen, setEggOpen] = useState(false);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % screenshots.length);
-  };
+  useEffect(() => {
+    if (!eggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [eggOpen]);
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) =>
-      prev === 0 ? screenshots.length - 1 : prev - 1
-    );
+  useEffect(() => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    timerRef.current = window.setInterval(() => {
+      setActive((i) => (i + 1) % screenshots.length);
+    }, 5500);
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const copyIP = async () => {
+    try {
+      await navigator.clipboard.writeText(SERVER_IP);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
-    <section id="frontierland" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Background with subtle purple glow - KEPT for Frontierland */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background to-card/50" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-10 pointer-events-none">
-        <div className="w-full h-full bg-gradient-radial from-primary/30 via-primary/10 to-transparent" />
-      </div>
-
-      <div className="section-container relative z-10">
-        {/* Header - with purple accent for Frontierland */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+    <section
+      id="frontierland"
+      className="violet-section relative section-shell py-24 md:py-32 border-t"
+    >
+      {/* Violet rail / kinetic ticker exclusive to this section */}
+      <div className="absolute top-0 inset-x-0 h-8 overflow-hidden border-b" style={{ borderColor: 'hsl(var(--violet-700) / 0.55)' }}>
+        <div
+          className="marquee-track flex items-center gap-10 h-full pr-10 font-mono text-[11px] uppercase tracking-[0.3em]"
+          style={{ animationDuration: '36s', color: 'hsl(var(--violet-300))' }}
         >
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            <span className="text-gradient">Frontierland</span>
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Наш уникальный майнкрафт сервер, где каждый может навалить контенту и забить на него через неделю.
-            <span className="text-primary"> (Андрей - Лучший Админ)</span>
-          </p>
-        </motion.div>
-
-        {/* Screenshot Carousel */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative max-w-5xl mx-auto"
-        >
-          <div className="relative aspect-video rounded-2xl overflow-hidden glass-card border border-primary/20">
-            {screenshots.map((screenshot, index) => (
-              <motion.img
-                key={index}
-                src={screenshot}
-                alt={`Frontierland screenshot ${index + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: index === currentSlide ? 1 : 0 }}
-                transition={{ duration: 0.5 }}
-              />
-            ))}
-
-            {/* Navigation Arrows */}
-            <motion.button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 hover:border-primary/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </motion.button>
-            <motion.button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/70 hover:border-primary/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </motion.button>
-
-            {/* Bottom-left description */}
-            <motion.div 
-              className="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md p-4 rounded-xl bg-background/70 backdrop-blur-sm border border-border/50"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <p className="text-sm md:text-base text-foreground leading-relaxed">
-                Погрузитесь в мир конченных сборок. Стройте писюны, 
-                исспытывайте терпение админа, завозите контент 
-                в уникальной атмосфере нашего сервера.
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Dots - with purple accent */}
-          <div className="flex justify-center gap-2 mt-6">
-            {screenshots.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? 'bg-primary w-8'
-                    : 'bg-muted hover:bg-muted-foreground w-2.5'
-                }`}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Features - with purple accents */}
-        <motion.div
-          className="grid md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {[
-            { icon: '🏰', title: 'Эпические спидраны', desc: 'В 1 секунду существования сервера кальций уже будет ходить в незерке' },
-            { icon: '⚔️', title: 'MGE срачи', desc: 'Пиздиловка из за маленького писюна... ОУ ДА!!!' },
-            { icon: '🤝', title: 'Админ завозит', desc: 'Админ бывает даёт ёбу и начинается ужас' },
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              className="glass-card p-6 rounded-2xl text-center hover:border-primary/30 transition-colors border border-border/50"
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-            >
-              <div className="text-4xl mb-3">{feature.icon}</div>
-              <h3 className="font-display font-semibold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm">{feature.desc}</p>
-            </motion.div>
+          {Array.from({ length: 4 }).map((_, dup) => (
+            <div key={dup} className="flex shrink-0 items-center gap-10" aria-hidden={dup > 0}>
+              <span>FRONTIERLAND</span>
+              <span>·</span>
+              <span>Бля хочу Крабсбургер</span>
+              <span>·</span>
+              <span>IP {SERVER_IP}</span>
+              <span>·</span>
+              <span>Хорошие сборки</span>
+              <span>·</span>
+              <span>{'<'} Заходи сука {'>'}</span>
+              <span>·</span>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
+
+      <div className="section-container pt-6">
+        <div
+          className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.28em] mb-8"
+          style={{ color: 'hsl(var(--violet-300))' }}
+        >
+          <span>№ V</span>
+          <span className="opacity-50">/</span>
+          <button
+            type="button"
+            onClick={() => setEggOpen(true)}
+            className="bg-transparent border-0 p-0 m-0 text-inherit font-inherit tracking-inherit cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            FRONTIERLAND
+          </button>
+          <span className="ml-auto opacity-70 hidden sm:inline">[MINISRUFT_SERVER]</span>
+        </div>
+
+        <div ref={ref} className="reveal">
+          {/* Full-width headline — always above the gallery. */}
+          <div className="mb-10 md:mb-14">
+            <div className="violet-badge mb-5">
+              <span aria-hidden="true">◆</span>
+              Frontier · Land
+            </div>
+            <h2
+              className="display-xl text-balance"
+              style={{ fontSize: 'clamp(3rem, 12vw, 11rem)' }}
+            >
+              <span>FRONTIER</span>
+              <span
+                className="relative inline-block"
+                style={{
+                  color: 'hsl(var(--violet-400))',
+                  textShadow:
+                    '0 0 32px hsl(var(--violet-400) / 0.55), 0 0 80px hsl(var(--violet-500) / 0.35)',
+                }}
+              >
+                LAND
+              </span>
+            </h2>
+            <p
+              className="mt-6 text-lg md:text-xl leading-relaxed max-w-2xl"
+              style={{ color: 'hsl(var(--violet-50) / 0.85)' }}
+            >
+              Майнкрафт сервер Андрея. Твой шанс увидеть, как люди срутся из-за моста и убитого армадила.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-10">
+          {/* Left — copy (without the headline now). */}
+          <div className="lg:col-span-5 order-2 lg:order-1">
+
+            {/* IP + copy */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-stretch">
+              <div
+                className="relative flex items-center gap-3 px-4 h-12 font-mono text-[12px] uppercase tracking-[0.25em] truncate"
+                style={{
+                  background: 'hsl(var(--violet-900) / 0.55)',
+                  border: '1px solid hsl(var(--violet-500) / 0.6)',
+                  color: 'hsl(var(--violet-50))',
+                }}
+              >
+                <span className="opacity-60 hidden sm:inline">IP &gt;</span>
+                <span className="truncate">{SERVER_IP}</span>
+              </div>
+              <button
+                type="button"
+                onClick={copyIP}
+                className="btn-violet h-12"
+                aria-label="Копировать IP"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? 'Скопировано' : 'Скопировать IP'}</span>
+              </button>
+            </div>
+
+            {/* Pillars grid */}
+            <ul className="mt-10 grid grid-cols-2 gap-px" style={{ background: 'hsl(var(--violet-500) / 0.45)', border: '1px solid hsl(var(--violet-500) / 0.45)' }}>
+              {pillars.map((p, i) => (
+                <li
+                  key={p.title}
+                  className="p-4 md:p-5"
+                  style={{
+                    background: 'hsl(0 0% 4%)',
+                    animation: 'fade-up 0.8s cubic-bezier(0.2,0.9,0.2,1) both',
+                    animationDelay: `${i * 120}ms`,
+                  }}
+                >
+                  <div
+                    className="font-mono text-[10px] uppercase tracking-[0.3em] mb-2"
+                    style={{ color: 'hsl(var(--violet-300))' }}
+                  >
+                    #0{i + 1}
+                  </div>
+                  <div className="font-display uppercase text-lg md:text-xl leading-none tracking-[-0.02em]">
+                    {p.title}
+                  </div>
+                  <div className="mt-2 text-sm" style={{ color: 'hsl(var(--violet-50) / 0.75)' }}>
+                    {p.text}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Right — screenshot stack */}
+          <div className="lg:col-span-7 order-1 lg:order-2">
+            <div className="relative aspect-[16/10] overflow-hidden" style={{ border: '1px solid hsl(var(--violet-500) / 0.5)' }}>
+              {screenshots.map(({ src, caption }, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={`Frontierland · ${caption}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                  style={{ opacity: active === i ? 1 : 0 }}
+                />
+              ))}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(180deg, hsl(265 60% 14% / 0) 0%, hsl(265 60% 14% / 0.6) 100%)',
+                }}
+              />
+              {/* HUD-ish labels */}
+              <div className="absolute top-4 left-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-300))' }}>
+                <span className="pulse-dot" style={{ background: 'hsl(var(--violet-400))', boxShadow: '0 0 12px hsl(var(--violet-400) / 0.6)' }} />
+                <span>Live feed · {String(active + 1).padStart(2, '0')}/{String(screenshots.length).padStart(2, '0')}</span>
+              </div>
+              <div
+                className="absolute bottom-4 left-4 font-mono text-[11px] uppercase tracking-[0.28em] max-w-[70%] truncate"
+                style={{ color: 'hsl(var(--violet-50))' }}
+              >
+                {screenshots[active]?.caption}
+              </div>
+              <div className="absolute bottom-4 right-4 font-mono text-[10px] uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--violet-50) / 0.8)' }}>
+                FRONTIERLAND
+              </div>
+
+              {/* Controls */}
+              <button
+                type="button"
+                onClick={() => setActive((i) => (i - 1 + screenshots.length) % screenshots.length)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center"
+                style={{
+                  background: 'hsl(0 0% 4% / 0.55)',
+                  border: '1px solid hsl(var(--violet-500) / 0.55)',
+                  color: 'hsl(var(--violet-50))',
+                }}
+                aria-label="Предыдущий скриншот"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActive((i) => (i + 1) % screenshots.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center"
+                style={{
+                  background: 'hsl(0 0% 4% / 0.55)',
+                  border: '1px solid hsl(var(--violet-500) / 0.55)',
+                  color: 'hsl(var(--violet-50))',
+                }}
+                aria-label="Следующий скриншот"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Pager strip */}
+            <div className="mt-4 flex items-center gap-2">
+              {screenshots.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  aria-label={`Показать ${i + 1}`}
+                  className="relative flex-1 h-[3px]"
+                  style={{
+                    background: 'hsl(var(--violet-500) / 0.25)',
+                  }}
+                >
+                  <span
+                    className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                    style={{
+                      width: active === i ? '100%' : '0%',
+                      background: 'hsl(var(--violet-400))',
+                      boxShadow: active === i ? '0 0 12px hsl(var(--violet-400) / 0.6)' : undefined,
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      {eggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setEggOpen(false)}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(94vw,820px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 07
+              </span>
+              <button
+                type="button"
+                onClick={() => setEggOpen(false)}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={frontierlandEggImg}
+              alt="95 БРАТКУ"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-white"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

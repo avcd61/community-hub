@@ -1,78 +1,124 @@
-import { motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useReveal } from '@/hooks/use-reveal';
 
-import logo from '@/assets/logo.png';
+import logo from '@/assets/logo.webp';
 
+const tags = [
+  { glyph: '♪', label: 'Музыка' },
+  { glyph: '☍', label: 'Игры' },
+  { glyph: '✶', label: 'Искусство' },
+  { glyph: '☷', label: 'Общение' },
+];
+
+/**
+ * Manifesto. Sits between About and Music. Giant numeric "95" with
+ * outline twin for depth, a Tatar manifesto block, and a badge row.
+ * Everything is static except a slow rotation on a small kinetic mark.
+ */
 const ServerIdentity = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const ref = useReveal<HTMLDivElement>();
 
   return (
-    <section id="server" className="py-24 relative overflow-hidden" ref={ref}>
-      {/* Subtle background - no purple glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-5">
-        <div className="w-full h-full bg-gradient-radial from-white/20 via-white/5 to-transparent" />
-      </div>
+    <section id="server" className="relative section-shell py-24 md:py-32">
+      <div className="section-container">
+        <div className="chapter-meta mb-8">
+          <span>№ III</span>
+          <span className="opacity-50">/</span>
+          <span>МАНИФЕСТ</span>
+          <span className="ml-auto opacity-50 hidden sm:inline">[IDENT_CARD]</span>
+        </div>
 
-      <div className="section-container relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
-          {/* Logo - no glow effects */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-            animate={isInView ? { opacity: 1, scale: 1, rotate: 0 } : {}}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="relative"
-            whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
-          >
-            <div className="relative w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80">
+        <div ref={ref} className="reveal grid lg:grid-cols-[auto_1fr] gap-10 lg:gap-20 items-center">
+          {/* Logo + giant numeric */}
+          <div className="relative flex items-center gap-6 md:gap-8">
+            <div className="relative w-32 h-32 md:w-40 md:h-40 border border-border bg-card shrink-0 flex items-center justify-center">
               <img
                 src={logo}
-                alt="FSR-95 Logo"
-                className="w-full h-full object-contain"
+                alt="FSR-95"
+                className="w-full h-full object-contain p-5"
+                loading="lazy"
+                decoding="async"
+                width={200}
+                height={200}
               />
+              <span className="pointer-events-none absolute -top-1 -left-1 w-4 h-4 border-t border-l border-foreground" />
+              <span className="pointer-events-none absolute -top-1 -right-1 w-4 h-4 border-t border-r border-foreground" />
+              <span className="pointer-events-none absolute -bottom-1 -left-1 w-4 h-4 border-b border-l border-foreground" />
+              <span className="pointer-events-none absolute -bottom-1 -right-1 w-4 h-4 border-b border-r border-foreground" />
             </div>
-          </motion.div>
+            <div
+              className="relative font-display uppercase leading-[0.8] select-none"
+              style={{ fontSize: 'clamp(5rem, 20vw, 16rem)', letterSpacing: '-0.05em' }}
+              aria-hidden="true"
+            >
+              <span
+                className="absolute inset-0 text-transparent"
+                style={{ WebkitTextStroke: '1px hsl(var(--foreground) / 0.35)' }}
+              >
+                95
+              </span>
+              <span className="relative text-foreground inline-block">95</span>
+            </div>
+          </div>
 
-          {/* Text Content */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center lg:text-left max-w-lg"
-          >
-            <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-foreground">
-              FSR-95
+          {/* Manifesto */}
+          <div>
+            <h2 className="display-lg mb-6">
+              FSR<span className="bg-foreground text-background px-[0.15em] mx-[0.03em]">-</span>95
             </h2>
-            <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
-Иҗат туа торган һәм нык дуслык бәйләнешләре корыла торган урын. Без гади генә Discord-сервер түгел — без музыка, уеннар һәм сәнгатькә булган уртак мәхәббәт белән берләшкән фикердәшләр гаиләсе.
+            <p className="text-foreground/80 text-lg md:text-xl leading-relaxed max-w-xl text-balance">
+              Иҗат туа торган һәм нык дуслык бәйләнешләре корыла торган урын. Без
+              гади генә Discord-сервер түгел — без музыка, уеннар һәм сәнгатькә
+              булган уртак мәхәббәт белән берләшкән фикердәшләр гаиләсе.
+            </p>
+            <p className="mt-4 font-serif-italic text-foreground/60 text-base md:text-lg max-w-xl" style={{ fontStyle: 'italic' }}>
+              /&nbsp;место где рождается творчество и куются крепкие дружеские связи.
             </p>
 
-            <motion.div 
-              className="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              {[
-                { emoji: '🎵', label: 'Музыка' },
-                { emoji: '🎮', label: 'Игры' },
-                { emoji: '🎨', label: 'Искусство' },
-                { emoji: '💬', label: 'Общение' },
-              ].map((item, index) => (
-                <motion.div
-                  key={item.label}
-                  className="px-4 py-2 rounded-full bg-card border border-border text-sm text-foreground hover:border-foreground/30 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                >
-                  {item.emoji} {item.label}
-                </motion.div>
+            <ul className="mt-10 flex flex-wrap gap-2">
+              {tags.map((t) => (
+                <li key={t.label} className="chip group transition-colors duration-200 hover:bg-foreground hover:text-background hover:border-foreground">
+                  <span aria-hidden="true" className="opacity-70 group-hover:opacity-100">{t.glyph}</span>
+                  {t.label}
+                </li>
               ))}
-            </motion.div>
-          </motion.div>
+            </ul>
+
+            {/* Kinetic mark — slow spinner with text around an SVG circle. */}
+            <div className="mt-10 flex items-center gap-5">
+              <div className="relative w-20 h-20 md:w-24 md:h-24 shrink-0">
+                <svg
+                  className="absolute inset-0 w-full h-full animate-spin-slow"
+                  viewBox="0 0 100 100"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <path
+                      id="server-circle"
+                      d="M 50,50 m -42,0 a 42,42 0 1,1 84,0 a 42,42 0 1,1 -84,0"
+                    />
+                  </defs>
+                  <text
+                    fontFamily="JetBrains Mono, monospace"
+                    fontSize="9"
+                    letterSpacing="4"
+                    fill="currentColor"
+                    className="text-foreground uppercase"
+                  >
+                    <textPath href="#server-circle">
+                      · FSR-95 · BROADCAST · EST. 2024 · MHZ 1995.00 · ЗАВОЗЯМБА
+                    </textPath>
+                  </text>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center font-display uppercase leading-none text-base text-foreground">
+                  95
+                </div>
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+                <div className="text-foreground">SIGNAL STABLE</div>
+                <div className="mt-1">24/7 · 365 · NO DAY OFF</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -1,265 +1,408 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, X } from 'lucide-react';
 
-import member1 from '@/assets/member-1.jpg';
-import member2 from '@/assets/member-2.jpg';
-import member3 from '@/assets/member-3.jpg';
-import member4 from '@/assets/member-4.jpg';
+import CharRise from '@/components/CharRise';
+import Marquee from '@/components/Marquee';
+import { useReveal } from '@/hooks/use-reveal';
 
-interface Member {
-  id: number;
-  name: string;
-  role: string;
-  quote: string;
-  avatar: string;
-  buttonUrl: string;
-  buttonText: string;
-}
+import andrewCutout from '@/assets/Andrew.cutout.webp';
+import brishaMp4 from '@/assets/Brisha.mp4';
+import brishaWebm from '@/assets/Brisha.webm';
+import brishaPoster from '@/assets/Brisha.webp';
+import doghAudio from '@/assets/Dogh.mp4';
+import adminEggImg from '@/assets/admin-egg.jpg';
+import adminEggSound from '@/assets/admin-egg.mp3';
+import bonedustEggImg from '@/assets/bonedust-egg.png';
 
-const members: Member[] = [
+const channels = [
   {
-    id: 1,
-    name: 'Дискорд сервер',
+    label: 'Discord',
     role: 'Обитель завозов',
-    quote: 'В этом месте сидят 95 братухи и делают завозы каждый день',
-    avatar: member1,
-    buttonUrl: 'https://discord.com/invite/PNnSKWNhYE',
-    buttonText: 'Присоединиться к серверу',
+    quote: 'Пиздецки смешные мемчики каждый день',
+    url: 'https://discord.com/invite/PNnSKWNhYE',
+    cta: 'Присоединиться',
   },
   {
-    id: 2,
-    name: 'Ютуб канал 95 братко',
-    role: 'Фильмы достойные оскара',
-    quote: 'Лучший ютуб канал стоящий на уровне мистера Макса и мисс Кейти',
-    avatar: member2,
-    buttonUrl: 'https://www.youtube.com/@ФСР95',
-    buttonText: 'Перейти на канал',
+    label: 'YouTube',
+    role: 'Фильмы уровня Оскара',
+    quote: 'ФСР-95 бросает вызов мистеру Максу',
+    url: 'https://www.youtube.com/@ФСР95',
+    cta: 'Подписаться',
   },
   {
-    id: 3,
-    name: 'Отрицательно живая группа стим',
-    role: 'Там есть докич',
-    quote: 'Группа 95 братко в стиме где нет актива но есть докич',
-    avatar: member3,
-    buttonUrl: 'https://steamcommunity.com/groups/FRSOOfficial',
-    buttonText: 'Посетить кладбище',
+    label: 'Steam',
+    role: 'Кладбище с Докичем',
+    quote: 'Актива нет — есть докич и легенда',
+    url: 'https://steamcommunity.com/groups/FRSOOfficial',
+    cta: 'Помянуть',
   },
   {
-    id: 4,
-    name: 'Труха 95',
-    role: '95 кружков жратвы бульменя',
-    quote: 'Здесь показана жизнь и быт ФСРа ну и ещё как бульмень готовит',
-    avatar: member4,
-    buttonUrl: 'https://t.me/+abSXXaH4cf9hNTky',
-    buttonText: 'Залететь в труху',
+    label: 'Telegram',
+    role: 'Труха 95',
+    quote: 'Как бульмень готовит кружки',
+    url: 'https://t.me/+abSXXaH4cf9hNTky',
+    cta: 'В трубу',
   },
 ];
 
+/**
+ * Hero. Three layered things:
+ *   1. Big kinetic title "ЗАВОЗЯМБА" with a serif italic "edition" callout.
+ *   2. Bottom dock of channel links with index numerals and row-inversion on hover.
+ *   3. Two floating cutouts (Brisha + Andrew) positioned as decorative elements
+ *      that react on hover (slight parallax/scale) — they don't crop the layout.
+ */
 const HeroCarousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
+  const ref = useReveal<HTMLDivElement>();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const adminEggAudioRef = useRef<HTMLAudioElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [adminEggOpen, setAdminEggOpen] = useState(false);
+  const [bonedustEggOpen, setBonedustEggOpen] = useState(false);
 
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setDirection(1);
-  //     setCurrentIndex((prev) => (prev + 1) % members.length);
-  //   }, 6000);
-  //   return () => clearInterval(timer);
-  // }, []);
+  const playDogh = () => {
+    if (!audioRef.current) {
+      const a = new Audio(doghAudio);
+      a.preload = 'none';
+      audioRef.current = a;
+    }
+    const a = audioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
 
-  const navigate = (newDirection: number) => {
-    setDirection(newDirection);
-    setCurrentIndex((prev) => {
-      if (newDirection === 1) {
-        return (prev + 1) % members.length;
+  const triggerAdminEgg = () => {
+    setAdminEggOpen(true);
+    if (!adminEggAudioRef.current) {
+      const a = new Audio(adminEggSound);
+      a.preload = 'auto';
+      adminEggAudioRef.current = a;
+    }
+    const a = adminEggAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  const closeAdminEgg = () => {
+    setAdminEggOpen(false);
+    const a = adminEggAudioRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+  };
+
+  useEffect(() => {
+    if (!adminEggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeAdminEgg();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [adminEggOpen]);
+
+  useEffect(() => {
+    if (!bonedustEggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBonedustEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [bonedustEggOpen]);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    let raf = 0;
+    let tx = 0;
+    let ty = 0;
+    const onMove = (e: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      tx = (e.clientX - cx) / rect.width;
+      ty = (e.clientY - cy) / rect.height;
+      if (!raf) {
+        raf = requestAnimationFrame(() => {
+          setParallax({ x: tx, y: ty });
+          raf = 0;
+        });
       }
-      return prev === 0 ? members.length - 1 : prev - 1;
-    });
-  };
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 300 : -300,
-      opacity: 0,
-    }),
-  };
-
-  const currentMember = members[currentIndex];
+    };
+    const onLeave = () => setParallax({ x: 0, y: 0 });
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    if (!coarse) {
+      el.addEventListener('pointermove', onMove);
+      el.addEventListener('pointerleave', onLeave);
+    }
+    return () => {
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', onLeave);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background gradient - no purple glow */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card" />
-      
-      {/* Subtle animated background element - neutral */}
-      <motion.div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-10"
-        style={{
-          background: 'radial-gradient(circle, hsl(0 0% 100% / 0.1) 0%, transparent 70%)',
-        }}
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.05, 0.1, 0.05],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
-
-      <div className="section-container relative z-10 py-20">
-        <motion.div
-          drag="x"
-          dragElastic={0.08}
-          dragMomentum={false}
-          dragConstraints={{ left: -120, right: 120 }}
-          onDragEnd={(e, info) => {
-            const threshold = 80; // px
-            if (info.offset.x > threshold) navigate(-1);
-            else if (info.offset.x < -threshold) navigate(1);
-          }}
-          className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[70vh] select-none"
+    <section
+      id="hero"
+      className="relative section-shell pt-24 md:pt-28 overflow-hidden"
+    >
+      {/* Top marquee */}
+      <Marquee duration={42}>
+        <span>Labas</span>
+        <span className="dot-sep" />
+        <button
+          type="button"
+          onClick={() => setBonedustEggOpen(true)}
+          className="cursor-pointer bg-transparent border-0 p-0 m-0 font-mono text-[11px] uppercase tracking-[0.28em] text-foreground opacity-60 hover:opacity-100 transition-opacity"
         >
-          {/* Avatar */}
-          <div className="flex justify-center lg:justify-end order-1 lg:order-1">
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={currentMember.id}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
-                className="relative"
-              >
-                <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
-                  {/* Subtle neutral glow instead of purple */}
-                  <div className="absolute inset-0 rounded-full bg-white/5 blur-2xl" />
-                  <img
-                    src={currentMember.avatar}
-                    alt={currentMember.name}
-                    draggable={false}
-                    className="relative w-full h-full object-cover rounded-full border-2 border-border/50 shadow-[0_0_60px_hsl(0_0%_100%/0.1)] select-none"
-                  />
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          BoneDust + Izumm = Sex
+        </button>
+        <span className="dot-sep" />
+        <button
+          type="button"
+          onClick={triggerAdminEgg}
+          className="cursor-pointer bg-transparent border-0 p-0 m-0 font-mono text-[11px] uppercase tracking-[0.28em] text-foreground hover:opacity-70 transition-opacity"
+        >
+          Админ всегда долбоёб
+        </button>
+        <span className="dot-sep" />
+        <span className="opacity-60">Кладе спиздил сладкий подарок</span>
+        <span className="dot-sep" />
+        <span>ПтичкаБурмалдичка</span>
+        <span className="dot-sep" />
+      </Marquee>
 
-          {/* Content */}
-          <div className="order-2 lg:order-2 text-center lg:text-left select-none">
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={currentMember.id}
-                custom={direction}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <motion.span
-                  className="inline-block px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-6 border border-border/50"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {currentMember.role}
-                </motion.span>
-
-                <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-foreground">
-                  {currentMember.name}
-                </h1>
-
-                <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-lg mx-auto lg:mx-0">
-                  "{currentMember.quote}"
-                </p>
-
-                <Button
-                  variant="default"
-                  size="xl"
-                  className="group bg-foreground text-background hover:bg-foreground/90 select-none"
-                  onClick={() => {
-                    if (currentMember.buttonUrl) {
-                      window.open(currentMember.buttonUrl, '_blank', 'noopener');
-                    }
-                  }}
-                >
-                  <span>{currentMember.buttonText}</span>
-                  <svg
-                    className="w-5 h-5 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Button>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-center gap-6 mt-12">
-          <motion.button
-            onClick={() => navigate(-1)}
-            className="p-3 rounded-full bg-card/50 border border-border/50 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+      {adminEggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={closeAdminEgg}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(92vw,640px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
           >
-            <ChevronLeft className="w-5 h-5" />
-          </motion.button>
-
-          <div className="flex gap-2">
-            {members.map((_, index) => (
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 02
+              </span>
               <button
-                key={index}
-                onClick={() => {
-                  setDirection(index > currentIndex ? 1 : -1);
-                  setCurrentIndex(index);
-                }}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-foreground w-8'
-                    : 'bg-muted hover:bg-muted-foreground w-2.5'
-                }`}
-              />
-            ))}
+                type="button"
+                onClick={closeAdminEgg}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={adminEggImg}
+              alt="Админ всегда долбоёб"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-black"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
+
+      {bonedustEggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setBonedustEggOpen(false)}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(92vw,640px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 03
+              </span>
+              <button
+                type="button"
+                onClick={() => setBonedustEggOpen(false)}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={bonedustEggImg}
+              alt="BoneDust + Izumm"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-black"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
+
+      <div ref={wrapRef} className="relative">
+        {/* Floating cutouts (behind the title content, above the bg canvas) */}
+        <div
+          className="pointer-events-none absolute top-[8%] left-[-4%] w-[34%] max-w-[440px] min-w-[180px] opacity-95 z-[5]"
+          style={{
+            transform: `translate3d(${parallax.x * -18}px, ${parallax.y * -12}px, 0)`,
+            transition: 'transform 0.35s cubic-bezier(0.2,0.9,0.2,1)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={playDogh}
+            aria-label="Брыша — нажми"
+            className="pointer-events-auto block w-full"
+          >
+            <video
+              muted
+              loop
+              autoPlay
+              playsInline
+              preload="none"
+              poster={brishaPoster}
+              className="block w-full h-auto object-contain"
+              width={1920}
+              height={1080}
+            >
+              <source src={brishaWebm} type="video/webm" />
+              <source src={brishaMp4} type="video/mp4" />
+            </video>
+          </button>
+        </div>
+
+        <div
+          className="pointer-events-none absolute bottom-[10%] md:bottom-[14%] right-[4%] md:right-[6%] w-[32%] md:w-[34%] max-w-[440px] min-w-[200px] opacity-95 z-[5]"
+          style={{
+            transform: `translate3d(${parallax.x * 18}px, ${parallax.y * 14}px, 0)`,
+            transition: 'transform 0.35s cubic-bezier(0.2,0.9,0.2,1)',
+          }}
+        >
+          <a
+            href="https://www.youtube.com/@ФСР95"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Andrew — на YouTube"
+            className="pointer-events-auto block w-full"
+          >
+            <img
+              src={andrewCutout}
+              alt=""
+              loading="eager"
+              decoding="async"
+              className="block w-full h-auto object-contain"
+            />
+          </a>
+        </div>
+
+        <div ref={ref} className="section-container relative z-10 pt-12 md:pt-20 pb-16 md:pb-24 reveal">
+          {/* Eyebrow */}
+          <div className="chapter-meta mb-8 md:mb-12">
+            <span className="pulse-dot" />
+            <span className="text-foreground">Frontier Squad Rebith</span>
+            <span className="hidden md:inline opacity-60">/ Born in 2025</span>
+            <span className="ml-auto opacity-60 hidden sm:inline">
+              <span className="font-serif-italic text-foreground/80 text-[15px] not-italic-tracking">95</span>
+            </span>
           </div>
 
-          <motion.button
-            onClick={() => navigate(1)}
-            className="p-3 rounded-full bg-card/50 border border-border/50 text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </motion.button>
+          {/* Title */}
+          <h1 className="font-display uppercase text-foreground leading-[0.86] tracking-[-0.03em]">
+            <span className="block text-[clamp(3rem,10vw,9rem)]">
+              <CharRise text="ЗАВО" stepMs={40} />
+            </span>
+            <span className="block text-[clamp(3rem,10vw,9rem)] relative">
+              <span className="inline-block bg-foreground text-background px-[0.1em]">
+                <CharRise text="ЗЯМБА" startDelay={120} stepMs={40} />
+              </span>
+            </span>
+          </h1>
+
+          {/* Sub-copy */}
+          <p className="mt-8 max-w-2xl text-base md:text-lg text-foreground/75 leading-relaxed text-balance">
+            Апгрейд сайта и он теперь красный культурно не получится.
+          </p>
+
+          {/* CTA row */}
+          <div className="mt-8 md:mt-10 flex flex-wrap items-center gap-3">
+            <a
+              href="https://discord.com/invite/PNnSKWNhYE"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-solid group"
+            >
+              <span>Залететь в дискорд</span>
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-[2px] group-hover:-translate-y-[2px]" />
+            </a>
+            <a href="#music" className="btn-invert group">
+              <span>Слушать альбомы</span>
+              <span className="opacity-60">↓</span>
+            </a>
+            <div className="ml-auto hidden md:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              <span>{'['}</span>
+              {[0, 1, 2, 3].map((i) => (
+                <span
+                  key={i}
+                  className="eq-bar"
+                  style={{
+                    height: '18px',
+                    animationDelay: `${i * 120}ms`,
+                    color: 'hsl(var(--foreground))',
+                  }}
+                />
+              ))}
+              <span>{']'}</span>
+              <span>Zavoz STABLE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Channels dock — 4 rows */}
+        <div className="relative z-10 section-container pb-16 md:pb-24">
+          <div className="chapter-meta mb-4">
+            <span>&gt;</span>
+            <span>Наши соц. сети / места прибывания</span>
+          </div>
+          <ul className="border-y border-border">
+            {channels.map((ch, i) => (
+              <li key={ch.label} className="border-b border-border last:border-b-0">
+                <a
+                  href={ch.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-8 py-5 md:py-6 transition-colors duration-200 hover:bg-foreground hover:text-background px-2 md:px-4"
+                >
+                  <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground group-hover:text-background/70 w-[3ch]">
+                    0{i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-display uppercase text-xl md:text-3xl leading-none tracking-[-0.02em]">
+                      {ch.label}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 md:gap-3 text-sm md:text-base text-foreground/70 group-hover:text-background/80">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground group-hover:text-background/60 border border-border group-hover:border-background/40 px-2 py-0.5">
+                        {ch.role}
+                      </span>
+                      <span className="truncate">{ch.quote}</span>
+                    </div>
+                  </div>
+                  <span className="flex items-center gap-2 md:gap-3 font-mono text-[11px] uppercase tracking-[0.25em]">
+                    <span className="hidden md:inline">{ch.cta}</span>
+                    <ArrowUpRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2">
-          <div className="w-1 h-2 rounded-full bg-foreground" />
-        </div>
-      </motion.div>
     </section>
   );
 };

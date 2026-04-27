@@ -1,90 +1,340 @@
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, ArrowUp, X } from 'lucide-react';
 
-import logo from '@/assets/logo.png';
+import Marquee from '@/components/Marquee';
+import footerEggGif from '@/assets/footer-egg.gif';
+import footerEggSound from '@/assets/footer-egg.ogg';
+
+const socials = [
+  { label: 'Discord', url: 'https://discord.com/invite/PNnSKWNhYE' },
+  { label: 'YouTube', url: 'https://www.youtube.com/@ФСР95' },
+  { label: 'Telegram', url: 'https://t.me/+abSXXaH4cf9hNTky' },
+  { label: 'Steam', url: 'https://steamcommunity.com/groups/FRSOOfficial' },
+];
+
+/**
+ * Kinetic "95" wordmark. Five stacked SVG layers, all animated via
+ * non-layout-affecting properties (stroke-dashoffset, opacity, and a
+ * transformed rect that lives inside a clipPath — the clipPath keeps the
+ * moving band visually confined to the glyph shape only):
+ *
+ *   1. Stepped extrusion (7 back ghosts) — static depth.
+ *   2. Solid fill.
+ *   3. Scan band — bright horizontal gradient wipes down through the
+ *      digits via a clipPath. Visible but can't escape the glyph bbox.
+ *   4. Pulsing blurred glow outline.
+ *   5. Two running-light outlines chasing in opposite directions for
+ *      the kinetic feel.
+ *
+ * Plus a subtle CRT-style flicker on the whole group so the wordmark
+ * reads as a live sign rather than static type.
+ */
+const GLYPH_PROPS = {
+  x: 500,
+  y: 300,
+  textAnchor: 'middle' as const,
+  fontFamily: 'Syne, sans-serif',
+  fontWeight: 800,
+  fontSize: 360,
+  letterSpacing: -10,
+};
+
+const KineticWordmark = () => {
+  return (
+    <div
+      className="relative mx-auto select-none pointer-events-none"
+      aria-hidden="true"
+      style={{ width: 'min(100%, 880px)' }}
+    >
+      <svg
+        viewBox="0 0 1000 360"
+        className="relative block w-full h-auto"
+        style={{ animation: 'footer-flicker 6.5s steps(1, end) infinite' }}
+      >
+        <defs>
+          <linearGradient id="footer-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="1" />
+            <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.82" />
+          </linearGradient>
+
+          {/*
+            Vertical bright band used by the scan animation. Previously
+            this used the `foreground` bone-white colour, which blended
+            with the glyph fill and read as basically invisible. Now it
+            uses the electric violet accent already defined on the site
+            (same family as Frontierland) so the band pops against the
+            fill with a clear colour shift. The bright core is wider
+            (38→62%) for a more readable sweep.
+          */}
+          <linearGradient id="footer-scan-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+            <stop offset="38%"  stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+            <stop offset="47%"  stopColor="hsl(var(--violet-300))" stopOpacity="0.85" />
+            <stop offset="50%"  stopColor="hsl(var(--violet-50))"  stopOpacity="1" />
+            <stop offset="53%"  stopColor="hsl(var(--violet-300))" stopOpacity="0.85" />
+            <stop offset="62%"  stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+            <stop offset="100%" stopColor="hsl(var(--violet-400))" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Clip path shaped as the "95" glyphs — keeps the scan band
+              visually inside the digits. */}
+          <clipPath id="footer-clip">
+            <text {...GLYPH_PROPS}>95</text>
+          </clipPath>
+        </defs>
+
+        {/* Back ghosts — stepped extrusion behind the fill. */}
+        {Array.from({ length: 7 }).map((_, i) => {
+          const d = 7 - i;
+          return (
+            <text
+              key={i}
+              {...GLYPH_PROPS}
+              fill="none"
+              stroke="hsl(var(--foreground))"
+              strokeOpacity={0.08 + i * 0.035}
+              strokeWidth="1.5"
+              transform={`translate(${d * 2}, ${-d * 6})`}
+            >
+              95
+            </text>
+          );
+        })}
+
+        {/* Solid fill. */}
+        <text {...GLYPH_PROPS} fill="url(#footer-fill)">
+          95
+        </text>
+
+        {/* Scan band — a tall rectangle clipped to the glyph shape. The
+            rect itself is 3× the svg height; translating it -33%..33%
+            sweeps the bright middle band through the visible area. */}
+        <g clipPath="url(#footer-clip)">
+          <rect
+            x="0"
+            y="-360"
+            width="1000"
+            height="1080"
+            fill="url(#footer-scan-grad)"
+            style={{
+              animation: 'footer-scan 3.6s linear infinite',
+              transformOrigin: '50% 50%',
+            }}
+          />
+        </g>
+
+        {/* Pulsing blurred glow outline. */}
+        <text
+          {...GLYPH_PROPS}
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="8"
+          style={{
+            animation: 'footer-glow 3.4s ease-in-out infinite',
+            filter: 'blur(10px)',
+          }}
+        >
+          95
+        </text>
+
+        {/* Forward running-light — bright, chunky dash sliding clockwise. */}
+        <text
+          {...GLYPH_PROPS}
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeOpacity={1}
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray="140 1120"
+          style={{ animation: 'footer-chase 3.6s linear infinite' }}
+        >
+          95
+        </text>
+
+        {/* Reverse running-light — thinner, faster, counter-clockwise. */}
+        <text
+          {...GLYPH_PROPS}
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeOpacity={0.85}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="40 1220"
+          style={{ animation: 'footer-chase-reverse 2.4s linear infinite' }}
+        >
+          95
+        </text>
+      </svg>
+
+      {/* Quiet typographic sig. */}
+      <div className="mt-4 text-center font-mono text-[11px] md:text-[13px] uppercase tracking-[0.45em] text-muted-foreground">
+        FSR · 95 · BROADCAST
+      </div>
+    </div>
+  );
+};
 
 const Footer = () => {
+  const toTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const [eggOpen, setEggOpen] = useState(false);
+  const gifAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playGifSound = () => {
+    if (!gifAudioRef.current) {
+      const a = new Audio(footerEggSound);
+      a.preload = 'auto';
+      gifAudioRef.current = a;
+    }
+    const a = gifAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  useEffect(() => {
+    if (!eggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      const a = gifAudioRef.current;
+      if (a) {
+        a.pause();
+        a.currentTime = 0;
+      }
+    };
+  }, [eggOpen]);
+
   return (
-    <footer className="py-12 relative border-t border-border/50">
-      <div className="section-container">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Logo and Text */}
-          <motion.div
-            className="flex items-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <img
-              src={logo}
-              alt="FSR-95"
-              className="w-12 h-12 object-contain"
-            />
-            <div>
-              <h3 className="font-display font-bold text-lg text-foreground">FSR-95</h3>
-              <p className="text-muted-foreground text-sm">All rights reserved</p>
+    <footer className="relative section-shell">
+      {/* Rail marquee at the top of footer. */}
+      <Marquee tone="paper" duration={44} reverse>
+        <span>END OF TRANSMISSION</span>
+        <span className="dot-sep" />
+        <span>FSR-95 · EDITION II</span>
+        <span className="dot-sep" />
+        <span>MADE IN 2026 · KЫR-95</span>
+        <span className="dot-sep" />
+        <span>{'<'} RETURN TO TOP {'>'}</span>
+        <span className="dot-sep" />
+      </Marquee>
+
+      <div className="section-container py-20 md:py-28 relative">
+        <KineticWordmark />
+
+        <div className="mt-14 md:mt-20 grid md:grid-cols-[minmax(0,1fr)_auto] gap-10 md:gap-14 items-end">
+          <div>
+            <div className="chapter-meta mb-3">
+              <span className="pulse-dot" />
+              <span>SIGNAL STABLE · 24/7</span>
             </div>
-          </motion.div>
+            <p className="text-foreground/70 max-w-xl text-balance">
+              Сделано 95 братухами ради ещё 95 000 братух. Ни одного дня без
+              завоза. Спасибо что смотришь.
+            </p>
+          </div>
 
-          {/* Social Links */}
-          <motion.div
-            className="flex items-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            {[
-              {
-                label: 'Discord',
-                icon: (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                  </svg>
-                ),
-              },
-              {
-                label: 'YouTube',
-                icon: (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                  </svg>
-                ),
-              },
-              {
-                label: 'Telegram',
-                icon: (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                  </svg>
-                ),
-              },
-            ].map((social) => (
-              <motion.a
-                key={social.label}
-                href="#"
-                className="p-3 rounded-full bg-card border border-border hover:border-foreground/30 hover:bg-muted transition-all"
-                aria-label={social.label}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {social.icon}
-              </motion.a>
+          <ul className="flex flex-wrap gap-2">
+            {socials.map((s) => (
+              <li key={s.label}>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-invert group"
+                >
+                  <span>{s.label}</span>
+                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-[2px] group-hover:-translate-y-[2px]" />
+                </a>
+              </li>
             ))}
-          </motion.div>
+          </ul>
+        </div>
 
-          {/* Year */}
-          <motion.p
-            className="text-muted-foreground text-sm"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+        {/* Hatched separator. */}
+        <div className="mt-14 h-[10px] hatch" aria-hidden="true" />
+
+        <div className="mt-6 flex items-center justify-between flex-wrap gap-4 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setEggOpen(true)}
+              className="bg-transparent border-0 p-0 m-0 text-inherit font-inherit tracking-inherit cursor-pointer hover:text-foreground transition-colors"
+            >
+              © 2025–2026 FSR-95
+            </button>
+            <span className="opacity-50">·</span>
+            <span>ZЫBRO / ОМБ / 95 000+</span>
+          </div>
+          <button
+            type="button"
+            onClick={toTop}
+            className="u-link inline-flex items-center gap-2 text-foreground"
+            aria-label="Наверх"
           >
-            © 2024 FSR-95
-          </motion.p>
+            <span>К началу</span>
+            <ArrowUp className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
+
+      {eggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setEggOpen(false)}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative w-[min(94vw,640px)] max-h-[88vh] overflow-y-auto bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 95
+              </span>
+              <button
+                type="button"
+                onClick={() => setEggOpen(false)}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="px-6 py-6 text-foreground/90 text-[15px] md:text-base leading-relaxed normal-case tracking-normal" style={{ fontFamily: 'inherit' }}>
+              <p>
+                Как же быстро летит время! Вроде только начало 25-го года — и тут хуяк, уже весна 26-го. Сколько же событий за эти полтора года произошло…
+              </p>
+              <p className="mt-3">
+                Честно говоря, я немного горд за то, что сервер, созданный по рофлу, стал чем-то большим — и за то, что я принял в этом непосредственное участие.
+              </p>
+              <p className="mt-3">
+                Надеюсь, ты нашёл все секреты (всего их 9). В принципе, вот и всё — точно всё. В консоль можно и не лезть — там контента для фанатов нет. На этом я прощаюсь и иду спать.
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex justify-center">
+              <button
+                type="button"
+                onClick={playGifSound}
+                aria-label="Издать звук"
+                className="bg-transparent border-0 p-0 m-0 cursor-pointer"
+              >
+                <img
+                  src={footerEggGif}
+                  alt=""
+                  className="block max-w-full h-auto pointer-events-none"
+                  style={{ imageRendering: 'pixelated', maxHeight: 280 }}
+                  draggable={false}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };

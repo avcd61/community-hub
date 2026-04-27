@@ -1,83 +1,83 @@
-import { motion } from 'framer-motion';
-import { MousePointer } from 'lucide-react';
-import Andrew from '@/assets/Andrew.gif';
-import Brisha from '@/assets/Brisha.gif';
-import Dogh from '@/assets/Dogh.mp4';
+import { useRef } from 'react';
 
-interface PlaceholderProps {
-  onClick?: () => void;
-  href?: string;
-  className?: string;
-}
+import andrewCutout from '@/assets/Andrew.cutout.webp';
+import brishaMp4 from '@/assets/Brisha.mp4';
+import brishaWebm from '@/assets/Brisha.webm';
+import brishaPoster from '@/assets/Brisha.webp';
+import doghAudio from '@/assets/Dogh.mp4';
 
-const Placeholder = ({ src, onClick, href, className }: PlaceholderProps & { src?: string }) => {
-  return (  
-    <motion.button
-      onClick={() => {
-        if (onClick) return onClick();
-        if (href) window.open(href, '_blank');
-      }}
-      className={`group relative rounded-2xl overflow-hidden transition-all duration-300 ${className}`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.98 }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-    >
-      {src ? (
-        <img src={src} alt="GIF" className="w-full h-full object-cover rounded-2xl" />
-      ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-          <MousePointer className="w-6 h-6" />
-          <span className="text-xs font-medium">GIF / Image</span>
-        </div>
-      )}
-    </motion.button>
-  );
-};
+/**
+ * Two cutouts shown at their native aspect with transparent backgrounds —
+ * no crop, no frames, no overlay tint. Brisha (looping VP9-alpha webm)
+ * sits top-left; Andrew (static transparent PNG cutout) hangs bottom-right.
+ * Both render above the CRT scanline overlay so nothing tints them.
+ */
+const andrewLink = 'https://www.youtube.com/@ФСР95';
 
 const InteractivePlaceholders = () => {
-  const andrewLink = 'https://www.youtube.com/@ФСР95';
- 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playDogh = () => {
+    if (!audioRef.current) {
+      const a = new Audio(doghAudio);
+      a.preload = 'none';
+      audioRef.current = a;
+    }
+    const a = audioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => { /* User hasn't interacted yet; ignore. */ });
+  };
+
+  const dropClass =
+    'block w-full h-auto object-contain relative z-[70]';
 
   return (
-    <section className="relative py-8 md:py-12">
-      {/* Background gradient - same as rest of site */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card" />
-      
-      <div className="section-container relative z-10">
-        <div className="flex justify-between items-center gap-20 md:gap-32 lg:gap-48">
-          {/* Left placeholder - positioned with offset from edge */}
-            <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="ml-4 md:ml-8"
+    <section className="relative py-16 md:py-24 border-b border-border">
+      <div className="section-container">
+        <div className="relative md:min-h-[520px]">
+          {/* Brisha — top-left, looping video */}
+          <button
+            type="button"
+            onClick={playDogh}
+            aria-label="Брыша"
+            className="group md:absolute md:top-0 md:left-0 w-full md:w-[44%] mb-8 md:mb-0"
+            style={{ filter: 'none', display: 'block' }}
           >
-              <Placeholder
-                src={Brisha}
-                onClick={() => {
-                  const audio = new Audio(Dogh);
-                  audio.play();
-                }}
-              />
-          </motion.div>
+            <video
+              muted
+              loop
+              autoPlay
+              playsInline
+              preload="none"
+              poster={brishaPoster}
+              className={dropClass}
+              width={1920}
+              height={1080}
+              style={{ filter: 'none' }}
+            >
+              <source src={brishaWebm} type="video/webm" />
+              <source src={brishaMp4} type="video/mp4" />
+            </video>
+          </button>
 
-          {/* Center space - can be used for decorative elements */}
-          <div className="flex-1" />
-
-          {/* Right placeholder - positioned with offset from edge */}
-            <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mr-4 md:mr-8"
+          {/* Andrew — bottom-right, static cutout */}
+          <a
+            href={andrewLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Andrew"
+            className="group md:absolute md:bottom-0 md:right-0 w-full md:w-[44%]"
+            style={{ filter: 'none', display: 'block' }}
           >
-            <Placeholder src={Andrew} href={andrewLink} />
-          </motion.div>
+            <img
+              src={andrewCutout}
+              alt="Andrew"
+              loading="lazy"
+              decoding="async"
+              className={dropClass}
+              style={{ filter: 'none' }}
+            />
+          </a>
         </div>
       </div>
     </section>
