@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
+
 import { useReveal } from '@/hooks/use-reveal';
 
 import andryhlyper from '@/assets/andryhlyper.webp';
@@ -5,6 +8,8 @@ import vovan from '@/assets/Vovan.webp';
 import bonedust from '@/assets/Bonedust.webp';
 import kalc from '@/assets/calci.webp';
 import bulim from '@/assets/Bul.webp';
+import fsrEggImg from '@/assets/fsr-egg.png';
+import fsrEggSound from '@/assets/fsr-egg.mp4';
 
 interface MemberCard {
   name: string;
@@ -79,6 +84,39 @@ const AboutSection = () => {
 
   const [feature, ...rest] = members;
 
+  const [fsrEggOpen, setFsrEggOpen] = useState(false);
+  const fsrEggAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const triggerFsrEgg = () => {
+    setFsrEggOpen(true);
+    if (!fsrEggAudioRef.current) {
+      const a = new Audio(fsrEggSound);
+      a.preload = 'auto';
+      fsrEggAudioRef.current = a;
+    }
+    const a = fsrEggAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  const closeFsrEgg = () => {
+    setFsrEggOpen(false);
+    const a = fsrEggAudioRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+  };
+
+  useEffect(() => {
+    if (!fsrEggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFsrEgg();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fsrEggOpen]);
+
   return (
     <section id="about" className="relative section-shell py-24 md:py-32">
       <div className="section-container">
@@ -100,8 +138,15 @@ const AboutSection = () => {
             </span>
           </h2>
           <p className="max-w-xl text-foreground/70 text-base md:text-lg mb-16 text-balance">
-            Самые завозные и активные братухи, которые вкладываются в развитие
-            ФСР каждый день — от монтажа до мордобоя.
+            Самые завозные и активные братухи, которые вкладываются в развитие{' '}
+            <button
+              type="button"
+              onClick={triggerFsrEgg}
+              className="cursor-pointer bg-transparent border-0 p-0 m-0 text-inherit font-inherit hover:text-foreground transition-colors"
+            >
+              ФСР
+            </button>{' '}
+            каждый день — от монтажа до мордобоя.
           </p>
 
           {/* Stats — static values, each cell inverts on hover. */}
@@ -242,6 +287,42 @@ const AboutSection = () => {
           </div>
         </div>
       </div>
+
+      {fsrEggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={closeFsrEgg}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(92vw,720px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 04
+              </span>
+              <button
+                type="button"
+                onClick={closeFsrEgg}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={fsrEggImg}
+              alt="Слава Богу 95"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-black"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };
