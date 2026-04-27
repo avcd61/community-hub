@@ -274,7 +274,7 @@ const Footer = () => {
             <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <span className="pulse-dot" />
-                SECRET · 09
+                SECRET · 95
               </span>
               <button
                 type="button"
