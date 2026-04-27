@@ -12,6 +12,7 @@ import brishaPoster from '@/assets/Brisha.webp';
 import doghAudio from '@/assets/Dogh.mp4';
 import adminEggImg from '@/assets/admin-egg.jpg';
 import adminEggSound from '@/assets/admin-egg.mp3';
+import bonedustEggImg from '@/assets/bonedust-egg.png';
 
 const channels = [
   {
@@ -58,6 +59,7 @@ const HeroCarousel = () => {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [adminEggOpen, setAdminEggOpen] = useState(false);
+  const [bonedustEggOpen, setBonedustEggOpen] = useState(false);
 
   const playDogh = () => {
     if (!audioRef.current) {
@@ -101,6 +103,15 @@ const HeroCarousel = () => {
   }, [adminEggOpen]);
 
   useEffect(() => {
+    if (!bonedustEggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBonedustEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [bonedustEggOpen]);
+
+  useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
     let raf = 0;
@@ -141,7 +152,13 @@ const HeroCarousel = () => {
       <Marquee duration={42}>
         <span>Labas</span>
         <span className="dot-sep" />
-        <span className="opacity-60">BoneDust + Izumm = Sex</span>
+        <button
+          type="button"
+          onClick={() => setBonedustEggOpen(true)}
+          className="cursor-pointer bg-transparent border-0 p-0 m-0 font-mono text-[11px] uppercase tracking-[0.28em] text-foreground opacity-60 hover:opacity-100 transition-opacity"
+        >
+          BoneDust + Izumm = Sex
+        </button>
         <span className="dot-sep" />
         <button
           type="button"
@@ -172,7 +189,7 @@ const HeroCarousel = () => {
             <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <span className="pulse-dot" />
-                SECRET · ADMIN
+                SECRET · 02
               </span>
               <button
                 type="button"
@@ -186,6 +203,42 @@ const HeroCarousel = () => {
             <img
               src={adminEggImg}
               alt="Админ всегда долбоёб"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-black"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
+
+      {bonedustEggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setBonedustEggOpen(false)}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(92vw,640px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 03
+              </span>
+              <button
+                type="button"
+                onClick={() => setBonedustEggOpen(false)}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={bonedustEggImg}
+              alt="BoneDust + Izumm"
               className="block w-full h-auto max-h-[78vh] object-contain bg-black"
               draggable={false}
             />
