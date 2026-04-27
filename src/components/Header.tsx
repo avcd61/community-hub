@@ -99,7 +99,7 @@ const Header = () => {
   return (
     <>
       {/* Thin status rail — always visible at the very top. */}
-      <div className="fixed top-0 inset-x-0 z-50 h-7 flex items-center border-b border-border bg-background/85 backdrop-blur-sm">
+      <div className="fixed top-0 inset-x-0 z-[60] h-7 flex items-center border-b border-border bg-background/85 backdrop-blur-sm">
         <div className="section-container flex items-center justify-between font-mono text-[10px] md:text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
           <div className="flex items-center gap-3 relative" ref={eggRef}>
             <button
@@ -107,7 +107,7 @@ const Header = () => {
               onClick={() => setEggOpen((v) => !v)}
               aria-label="Секрет"
               aria-expanded={eggOpen}
-              className="pulse-dot cursor-pointer p-0 border-0 bg-transparent inline-block align-middle"
+              className="pulse-dot cursor-pointer p-0 border-0 align-middle"
               style={{ padding: 0 }}
             />
             <span className="text-foreground">FSR-95</span>
@@ -117,7 +117,7 @@ const Header = () => {
               <div
                 role="dialog"
                 aria-label="Секрет"
-                className="fixed left-3 sm:left-6 md:left-10 top-[88px] z-[100] w-[min(92vw,380px)] bg-card border border-border shadow-[0_18px_60px_-12px_hsl(0_0%_0%/0.7)] animate-fade-in"
+                className="absolute left-0 top-full mt-3 z-[10] w-[min(92vw,380px)] bg-card border border-border shadow-[0_18px_60px_-12px_hsl(0_0%_0%/0.7)] animate-fade-in"
                 style={{ textTransform: 'none', letterSpacing: '0' }}
               >
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
