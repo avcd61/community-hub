@@ -117,7 +117,7 @@ const Header = () => {
               <div
                 role="dialog"
                 aria-label="Секрет"
-                className="absolute left-0 top-full mt-3 z-[60] w-[min(92vw,360px)] bg-card border border-border shadow-[0_12px_40px_-12px_hsl(0_0%_0%/0.6)] animate-fade-in"
+                className="fixed left-3 sm:left-6 md:left-10 top-[88px] z-[100] w-[min(92vw,380px)] bg-card border border-border shadow-[0_18px_60px_-12px_hsl(0_0%_0%/0.7)] animate-fade-in"
                 style={{ textTransform: 'none', letterSpacing: '0' }}
               >
                 <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -129,7 +129,7 @@ const Header = () => {
                     type="button"
                     onClick={() => setEggOpen(false)}
                     aria-label="Закрыть"
-                    className="w-6 h-6 flex items-center justify-center text-foreground/70 hover:text-foreground"
+                    className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
