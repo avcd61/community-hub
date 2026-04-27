@@ -29,6 +29,8 @@ import album5Mp4 from '@/assets/Echo95.mp4';
 import album5Webm from '@/assets/Echo95.webm';
 import album5Poster from '@/assets/Echo95.webp';
 import album6 from '@/assets/16years.webp';
+import nigorEggSound from '@/assets/nigor-egg.mp3';
+import nigorEggCover from '@/assets/nigor-egg-cover.jpg';
 
 type Track = { title: string; file?: string };
 
@@ -393,6 +395,39 @@ const Visualizer = ({
 // --- Main section ------------------------------------------------------------
 
 const MusicSection = () => {
+  const [nigorEggOpen, setNigorEggOpen] = useState(false);
+  const nigorEggAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const triggerNigorEgg = () => {
+    setNigorEggOpen(true);
+    if (!nigorEggAudioRef.current) {
+      const a = new Audio(nigorEggSound);
+      a.preload = 'auto';
+      nigorEggAudioRef.current = a;
+    }
+    const a = nigorEggAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  const closeNigorEgg = () => {
+    setNigorEggOpen(false);
+    const a = nigorEggAudioRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+  };
+
+  useEffect(() => {
+    if (!nigorEggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeNigorEgg();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [nigorEggOpen]);
+
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumType | null>(null);
   /*
     Modal visibility is decoupled from whether an album is loaded so that
@@ -660,7 +695,13 @@ const MusicSection = () => {
           <span>№ IV</span>
           <span className="opacity-50">/</span>
           <span>АЛЬБОМЫ</span>
-          <span className="ml-auto opacity-50 hidden sm:inline">[FREQ.95_PLAYER]</span>
+          <button
+            type="button"
+            onClick={triggerNigorEgg}
+            className="ml-auto opacity-50 hover:opacity-100 transition-opacity hidden sm:inline bg-transparent border-0 p-0 m-0 cursor-pointer text-inherit font-inherit tracking-inherit"
+          >
+            [НИГОР]
+          </button>
         </div>
 
         <div ref={sectionRef} className="reveal">
@@ -1190,6 +1231,45 @@ const MusicSection = () => {
             >
               <X className="w-3.5 h-3.5" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {nigorEggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={closeNigorEgg}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative w-[min(92vw,420px)] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 06
+              </span>
+              <button
+                type="button"
+                onClick={closeNigorEgg}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={nigorEggCover}
+              alt="Нигор"
+              className="block w-full h-auto bg-black"
+              draggable={false}
+            />
+            <div className="px-4 py-3 border-t border-border font-mono text-[11px] uppercase tracking-[0.25em] text-foreground/80">
+              НИГОР
+            </div>
           </div>
         </div>
       )}
