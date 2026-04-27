@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Check, X } from 'lucide-react';
 
 import { useReveal } from '@/hooks/use-reveal';
 
@@ -14,6 +14,7 @@ import fl8 from '@/assets/FL8.webp';
 import fl9 from '@/assets/FL9.webp';
 import fl10 from '@/assets/FL10.webp';
 import fl11 from '@/assets/FL11.webp';
+import frontierlandEggImg from '@/assets/frontierland-egg.png';
 
 /*
   In-game screenshots from Frontierland. Caption is a short Cyrillic
@@ -52,6 +53,16 @@ const FrontierlandSection = () => {
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const [eggOpen, setEggOpen] = useState(false);
+
+  useEffect(() => {
+    if (!eggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [eggOpen]);
 
   useEffect(() => {
     if (timerRef.current) window.clearInterval(timerRef.current);
@@ -108,7 +119,13 @@ const FrontierlandSection = () => {
         >
           <span>№ V</span>
           <span className="opacity-50">/</span>
-          <span>FRONTIERLAND</span>
+          <button
+            type="button"
+            onClick={() => setEggOpen(true)}
+            className="bg-transparent border-0 p-0 m-0 text-inherit font-inherit tracking-inherit cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            FRONTIERLAND
+          </button>
           <span className="ml-auto opacity-70 hidden sm:inline">[MINISRUFT_SERVER]</span>
         </div>
 
@@ -293,6 +310,41 @@ const FrontierlandSection = () => {
           </div>
         </div>
       </div>
+      {eggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setEggOpen(false)}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(94vw,820px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 07
+              </span>
+              <button
+                type="button"
+                onClick={() => setEggOpen(false)}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={frontierlandEggImg}
+              alt="95 БРАТКУ"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-white"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };
