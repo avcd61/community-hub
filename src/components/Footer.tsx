@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ArrowUp, X } from 'lucide-react';
 
 import Marquee from '@/components/Marquee';
 import footerEggGif from '@/assets/footer-egg.gif';
+import footerEggSound from '@/assets/footer-egg.ogg';
 
 const socials = [
   { label: 'Discord', url: 'https://discord.com/invite/PNnSKWNhYE' },
@@ -176,6 +177,18 @@ const KineticWordmark = () => {
 const Footer = () => {
   const toTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const [eggOpen, setEggOpen] = useState(false);
+  const gifAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playGifSound = () => {
+    if (!gifAudioRef.current) {
+      const a = new Audio(footerEggSound);
+      a.preload = 'auto';
+      gifAudioRef.current = a;
+    }
+    const a = gifAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
 
   useEffect(() => {
     if (!eggOpen) return;
@@ -183,7 +196,14 @@ const Footer = () => {
       if (e.key === 'Escape') setEggOpen(false);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      const a = gifAudioRef.current;
+      if (a) {
+        a.pause();
+        a.currentTime = 0;
+      }
+    };
   }, [eggOpen]);
 
   return (
@@ -297,13 +317,20 @@ const Footer = () => {
               </p>
             </div>
             <div className="px-6 pb-6 flex justify-center">
-              <img
-                src={footerEggGif}
-                alt=""
-                className="block max-w-full h-auto"
-                style={{ imageRendering: 'pixelated', maxHeight: 280 }}
-                draggable={false}
-              />
+              <button
+                type="button"
+                onClick={playGifSound}
+                aria-label="Издать звук"
+                className="bg-transparent border-0 p-0 m-0 cursor-pointer"
+              >
+                <img
+                  src={footerEggGif}
+                  alt=""
+                  className="block max-w-full h-auto pointer-events-none"
+                  style={{ imageRendering: 'pixelated', maxHeight: 280 }}
+                  draggable={false}
+                />
+              </button>
             </div>
           </div>
         </div>
