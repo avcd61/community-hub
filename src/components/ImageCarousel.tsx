@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, X } from 'lucide-react';
 
 import { useReveal } from '@/hooks/use-reveal';
+
+import ep7EggImg from '@/assets/ep7-egg.png';
+import ep7EggSound from '@/assets/ep7-egg.mp3';
 
 interface Episode {
   n: string;
@@ -106,6 +109,38 @@ const ImageCarousel = () => {
   const ref = useReveal<HTMLDivElement>();
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(0);
+  const [ep7EggOpen, setEp7EggOpen] = useState(false);
+  const ep7EggAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const triggerEp7Egg = () => {
+    setEp7EggOpen(true);
+    if (!ep7EggAudioRef.current) {
+      const a = new Audio(ep7EggSound);
+      a.preload = 'auto';
+      ep7EggAudioRef.current = a;
+    }
+    const a = ep7EggAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
+  const closeEp7Egg = () => {
+    setEp7EggOpen(false);
+    const a = ep7EggAudioRef.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+  };
+
+  useEffect(() => {
+    if (!ep7EggOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeEp7Egg();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [ep7EggOpen]);
   /*
     Per-episode fallback state. YouTube does not render a
     `maxresdefault.jpg` for every video (e.g. episode 5, 8RqMc50rabo,
@@ -263,8 +298,10 @@ const ImageCarousel = () => {
                           'radial-gradient(65% 75% at 50% 55%, #231f0c 0%, #0c0c0c 78%)',
                       }}
                     >
-                      <div
-                        className="font-display uppercase leading-none tracking-[-0.02em]"
+                      <button
+                        type="button"
+                        onClick={ep.tba ? triggerEp7Egg : undefined}
+                        className="font-display uppercase leading-none tracking-[-0.02em] bg-transparent border-0 p-0 m-0 cursor-pointer hover:opacity-100 transition-opacity"
                         style={{
                           fontSize: 'clamp(6rem, 22vw, 20rem)',
                           color: GOLD,
@@ -272,10 +309,10 @@ const ImageCarousel = () => {
                             '0 0 40px rgba(255,215,0,0.28), 0 0 120px rgba(255,215,0,0.12)',
                           opacity: 0.9,
                         }}
-                        aria-hidden="true"
+                        aria-label="Открыть секрет"
                       >
                         ???
-                      </div>
+                      </button>
                     </div>
                   ) : (
                     <img
@@ -402,7 +439,17 @@ const ImageCarousel = () => {
                           textShadow: '0 2px 24px rgba(0,0,0,0.7)',
                         }}
                       >
-                        {ep.title}
+                        {ep.tba ? (
+                          <button
+                            type="button"
+                            onClick={triggerEp7Egg}
+                            className="bg-transparent border-0 p-0 m-0 text-inherit font-inherit tracking-inherit leading-inherit cursor-pointer hover:opacity-80 transition-opacity"
+                          >
+                            {ep.title}
+                          </button>
+                        ) : (
+                          ep.title
+                        )}
                       </div>
                       <p
                         className="mt-3 max-w-[48ch] text-sm md:text-base"
@@ -517,6 +564,42 @@ const ImageCarousel = () => {
           </div>
         </div>
       </div>
+
+      {ep7EggOpen && (
+        <div
+          role="dialog"
+          aria-label="Секрет"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+          onClick={closeEp7Egg}
+          style={{ textTransform: 'none', letterSpacing: 0 }}
+        >
+          <div
+            className="relative max-w-[min(94vw,960px)] max-h-[88vh] bg-card border border-border shadow-[0_24px_80px_-12px_hsl(0_0%_0%/0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="pulse-dot" />
+                SECRET · 08
+              </span>
+              <button
+                type="button"
+                onClick={closeEp7Egg}
+                aria-label="Закрыть"
+                className="w-6 h-6 flex items-center justify-center text-white hover:opacity-80"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <img
+              src={ep7EggImg}
+              alt="Меллстрой"
+              className="block w-full h-auto max-h-[78vh] object-contain bg-black"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };
