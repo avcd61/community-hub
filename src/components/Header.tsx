@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
 import logo from '@/assets/logo.webp';
+
+const EGG_TEXT =
+  'Нихера себе! Ты нашёл секретку, но вопрос — зачем? Нахер ты вообще шаришься по этому сайту, он разве так интересен? Ну ладно, если ты это видишь, то либо ты макака, которая везде кликает, либо целенаправленно искал тут секретки. Ну, удачи найти все пасхалки!';
 
 const navLinks = [
   { label: 'Главная', href: '#hero', index: 'I' },
@@ -22,6 +25,8 @@ const Header = () => {
   const [open, setOpen] = useState(false);
   const [activeHash, setActiveHash] = useState<string>('#hero');
   const [clock, setClock] = useState<string>('');
+  const [eggOpen, setEggOpen] = useState(false);
+  const eggRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -56,6 +61,24 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
+    if (!eggOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (eggRef.current && !eggRef.current.contains(e.target as Node)) {
+        setEggOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEggOpen(false);
+    };
+    window.addEventListener('mousedown', onClick);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousedown', onClick);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [eggOpen]);
+
+  useEffect(() => {
     const tick = () => {
       const d = new Date();
       const hh = String(d.getUTCHours()).padStart(2, '0');
@@ -78,10 +101,44 @@ const Header = () => {
       {/* Thin status rail — always visible at the very top. */}
       <div className="fixed top-0 inset-x-0 z-50 h-7 flex items-center border-b border-border bg-background/85 backdrop-blur-sm">
         <div className="section-container flex items-center justify-between font-mono text-[10px] md:text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-          <div className="flex items-center gap-3">
-            <span className="pulse-dot" />
+          <div className="flex items-center gap-3 relative" ref={eggRef}>
+            <button
+              type="button"
+              onClick={() => setEggOpen((v) => !v)}
+              aria-label="Секрет"
+              aria-expanded={eggOpen}
+              className="pulse-dot cursor-pointer p-0 border-0 bg-transparent inline-block align-middle"
+              style={{ padding: 0 }}
+            />
             <span className="text-foreground">FSR-95</span>
             <span className="hidden sm:inline">/ Version IV</span>
+
+            {eggOpen && (
+              <div
+                role="dialog"
+                aria-label="Секрет"
+                className="absolute left-0 top-full mt-3 z-[60] w-[min(92vw,360px)] bg-card border border-border shadow-[0_12px_40px_-12px_hsl(0_0%_0%/0.6)] animate-fade-in"
+                style={{ textTransform: 'none', letterSpacing: '0' }}
+              >
+                <div className="flex items-center justify-between px-4 py-2 border-b border-border font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="pulse-dot" />
+                    SECRET · 01
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEggOpen(false)}
+                    aria-label="Закрыть"
+                    className="w-6 h-6 flex items-center justify-center text-foreground/70 hover:text-foreground"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="px-4 py-4 text-sm leading-relaxed text-foreground font-sans normal-case tracking-normal">
+                  {EGG_TEXT}
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline">95 Братухи зовут...</span>
