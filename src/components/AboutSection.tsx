@@ -10,6 +10,7 @@ import kalc from '@/assets/calci.webp';
 import bulim from '@/assets/Bul.webp';
 import fsrEggImg from '@/assets/fsr-egg.png';
 import fsrEggSound from '@/assets/fsr-egg.mp4';
+import bulimEggSound from '@/assets/bulim-egg.mp3';
 
 interface MemberCard {
   name: string;
@@ -86,6 +87,18 @@ const AboutSection = () => {
 
   const [fsrEggOpen, setFsrEggOpen] = useState(false);
   const fsrEggAudioRef = useRef<HTMLAudioElement | null>(null);
+  const bulimEggAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const triggerBulimEgg = () => {
+    if (!bulimEggAudioRef.current) {
+      const a = new Audio(bulimEggSound);
+      a.preload = 'auto';
+      bulimEggAudioRef.current = a;
+    }
+    const a = bulimEggAudioRef.current;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
 
   const triggerFsrEgg = () => {
     setFsrEggOpen(true);
@@ -237,10 +250,13 @@ const AboutSection = () => {
             </article>
 
             {/* Remaining members — portrait-top cards */}
-            {rest.map((m, i) => (
+            {rest.map((m, i) => {
+              const isBulim = m.name === 'Булимень';
+              return (
               <article
                 key={m.name}
-                className="group relative bg-card overflow-hidden transition-colors duration-300 hover:bg-foreground hover:text-background"
+                onClick={isBulim ? triggerBulimEgg : undefined}
+                className={`group relative bg-card overflow-hidden transition-colors duration-300 hover:bg-foreground hover:text-background${isBulim ? ' cursor-pointer' : ''}`}
                 style={{
                   animation: 'fade-up 0.8s cubic-bezier(0.2,0.9,0.2,1) both',
                   animationDelay: `${140 + i * 80}ms`,
@@ -283,7 +299,8 @@ const AboutSection = () => {
                   )}
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
