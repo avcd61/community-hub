@@ -4,6 +4,7 @@ import asyncio
 import datetime
 import functools
 import logging
+import random
 import time
 from collections import deque
 from enum import Enum
@@ -64,8 +65,17 @@ class Song:
         partial = functools.partial(ytdl.extract_info, query, download=False)
         data = await loop.run_in_executor(None, partial)
 
+        if data is None:
+            raise ValueError(f"Could not extract info for: {query}")
+
         if "entries" in data:
-            data = data["entries"][0]
+            entries = data["entries"]
+            if not entries:
+                raise ValueError(f"No results found for: {query}")
+            data = entries[0]
+
+        if "url" not in data:
+            raise ValueError(f"No playable URL found for: {query}")
 
         return cls(
             source_url=data["url"],
@@ -76,14 +86,32 @@ class Song:
             requester=requester,
         )
 
+    async def refresh_source(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Re-extract the stream URL to avoid expiration."""
+        try:
+            partial = functools.partial(ytdl.extract_info, self.url or self.title, download=False)
+            data = await loop.run_in_executor(None, partial)
+            if data is None:
+                return
+            if "entries" in data:
+                entries = data["entries"]
+                if not entries:
+                    return
+                data = entries[0]
+            if "url" in data:
+                self.source_url = data["url"]
+        except Exception as e:
+            log.warning("Failed to refresh source URL for %s: %s", self.title, e)
+
     @property
     def duration_str(self) -> str:
         if not self.duration:
             return "LIVE"
         return str(datetime.timedelta(seconds=self.duration))
 
-    def create_source(self) -> discord.FFmpegOpusAudio:
-        return discord.FFmpegOpusAudio(self.source_url, **FFMPEG_OPTIONS)
+    def create_source(self, volume: float = 0.5) -> discord.PCMVolumeTransformer:
+        source = discord.FFmpegPCMAudio(self.source_url, **FFMPEG_OPTIONS)
+        return discord.PCMVolumeTransformer(source, volume=volume)
 
     def embed(self, title_prefix: str = "Now Playing") -> discord.Embed:
         em = discord.Embed(
@@ -257,6 +285,9 @@ class Music(commands.Cog):
 
         if player.loop_mode == LoopMode.SINGLE and player.current:
             song = player.current
+            asyncio.run_coroutine_threadsafe(
+                song.refresh_source(self.bot.loop), self.bot.loop
+            ).result(timeout=15)
         elif player.queue:
             if player.loop_mode == LoopMode.QUEUE and player.current:
                 player.queue.append(player.current)
@@ -270,7 +301,7 @@ class Music(commands.Cog):
         song.started_at = time.time()
 
         try:
-            source = song.create_source()
+            source = song.create_source(volume=player.volume)
             guild.voice_client.play(source, after=lambda e: self.play_next(guild_id, e))
         except Exception as e:
             log.error("Failed to play %s: %s", song.title, e)
@@ -326,7 +357,7 @@ class Music(commands.Cog):
         else:
             player.current = song
             song.started_at = time.time()
-            source = song.create_source()
+            source = song.create_source(volume=player.volume)
             vc.play(source, after=lambda e: self.play_next(interaction.guild_id, e))
 
             em = song.embed()
@@ -459,8 +490,8 @@ class Music(commands.Cog):
         player.volume = level / 100.0
 
         vc = interaction.guild.voice_client
-        if vc and vc.source:
-            vc.source = discord.PCMVolumeTransformer(vc.source, volume=player.volume)
+        if vc and vc.source and isinstance(vc.source, discord.PCMVolumeTransformer):
+            vc.source.volume = player.volume
 
         emoji = "🔇" if level == 0 else "🔈" if level < 30 else "🔉" if level < 70 else "🔊"
         await interaction.response.send_message(
@@ -476,7 +507,6 @@ class Music(commands.Cog):
         if not player or len(player.queue) < 2:
             return await interaction.response.send_message("Not enough songs to shuffle.", ephemeral=True)
 
-        import random
         queue_list = list(player.queue)
         random.shuffle(queue_list)
         player.queue = deque(queue_list)
